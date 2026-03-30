@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
+    <PackageReference Include="BCrypt.Net-Next" Version="4.1.0" />
+    <PackageReference Include="Scrutor" Version="7.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TenzyBackend.Data\TenzyBackend.Data.csproj" />
+    <ProjectReference Include="..\TenzyBackend.DBContext\TenzyBackend.DBContext.csproj" />
+    <ProjectReference Include="..\TenzyBackend.Models\TenzyBackend.Models.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,6 @@
+@TencyBackendApi_HostAddress = http://localhost:5225
+
+GET {{TencyBackendApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

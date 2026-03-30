@@ -1,0 +1,9 @@
+<Solution>
+  <Project Path="SharedResources/SharedResources.csproj" Id="6b19cf23-6b5c-4b91-8127-d137b317ca0d" />
+  <Project Path="TencyBackendApi/TencyBackendApi.csproj" />
+  <Project Path="TenzyBackend.Core/TenzyBackend.Core.csproj" Id="89009fad-7e5e-43e6-ba67-831a29cc26ab" />
+  <Project Path="TenzyBackend.Data/TenzyBackend.Data.csproj" Id="2c9a6b6e-bae6-47cd-81e8-58292eab5808" />
+  <Project Path="TenzyBackend.DBContext/TenzyBackend.DBContext.csproj" Id="9068ba94-b97b-4d6f-a26e-b955638d584a" />
+  <Project Path="TenzyBackend.Entity/TenzyBackend.Entity.csproj" Id="c1d296d0-6352-461d-a31d-65f5d9143c78" />
+  <Project Path="TenzyBackend.Models/TenzyBackend.Models.csproj" Id="a4b31ee8-ca2e-474b-ae3a-e877064efbe3" />
+</Solution>

@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SharedResources\SharedResources.csproj" />
+    <ProjectReference Include="..\TenzyBackend.DBContext\TenzyBackend.DBContext.csproj" />
+    <ProjectReference Include="..\TenzyBackend.Entity\TenzyBackend.Entity.csproj" />
+  </ItemGroup>
+
+</Project>
