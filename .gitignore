@@ -361,3 +361,12 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# User secrets and local configuration (NEVER commit these)
+secrets.json
+appsettings.Local.json
+appsettings.*.Local.json
+**/Properties/launchSettings.json
+
+# dotnet user-secrets store (OS-level, not in repo)
+# Run: dotnet user-secrets set "ConnectionStrings:production" "your-connection-string"
+# Run: dotnet user-secrets set "Jwt:Key" "your-jwt-key-min-32-chars"
