@@ -11,6 +11,7 @@ using System.Text;
 
 using TenzyBackend.Core.Functions;
 using TenzyBackend.Core.Mapping;
+using TenzyBackend.Data.Audit;
 using TenzyBackend.Data.UserLogin;
 
 using TenzyBackend.Entity.UserEntity;
@@ -25,11 +26,15 @@ namespace TenzyBackend.Core.Services.TokenService
         public IConfiguration Configuration { get; set; }
         public readonly ILoginWriter _loginWriter;
         private readonly IObjectMapper _objectMapper;
-        public Tokenservice(IConfiguration configuration,ILoginWriter loginWriter, IObjectMapper objectMapper)
+        private readonly IAuditWriter _auditWriter;
+
+        public Tokenservice(IConfiguration configuration, ILoginWriter loginWriter,
+                            IObjectMapper objectMapper, IAuditWriter auditWriter)
         {
-            Configuration= configuration;
-            _loginWriter= loginWriter;
+            Configuration = configuration;
+            _loginWriter  = loginWriter;
             _objectMapper = objectMapper;
+            _auditWriter  = auditWriter;
         }
         
         
@@ -133,19 +138,24 @@ namespace TenzyBackend.Core.Services.TokenService
 
                 var existing = await _loginWriter.UserfindByEmail(Email);
                 if (existing == null)
+                {
+                    await _auditWriter.LogLoginAttemptAsync(Email, false, failReason: "EmailNotFound");
                     return new RegistrationResultModel { Message = "Invalid email or password" };
+                }
 
                 // get the password from the user for validation
                 string hashedPassword = await _loginWriter.GetuserPassword(Email);
                 if (string.IsNullOrEmpty(hashedPassword))
                     return new RegistrationResultModel { Message = "System issue no password found in DB" };
 
-
                 //validate the password locks
                 bool allowed = await _loginWriter.ValidatePasswordLocks(Email);
                 if (!allowed)
+                {
+                    await _auditWriter.LogLoginAttemptAsync(Email, false,
+                        userId: existing.Id, failReason: "AccountLocked");
                     return new RegistrationResultModel { Message = "Account locked. Try again later." };
-
+                }
 
                 // validate the password
                 bool passwordValidate = PasswordHasher.Verify(Password,hashedPassword);
@@ -153,13 +163,15 @@ namespace TenzyBackend.Core.Services.TokenService
                 if (!passwordValidate)
                 {
                     await _loginWriter.RegisterFailedLoginAttempt(Email);
+                    await _auditWriter.LogLoginAttemptAsync(Email, false,
+                        userId: existing.Id, failReason: "InvalidPassword");
                     return new RegistrationResultModel
                     {
                         Message = "Password is incorrect, please use the correct password or " +
                         "reset the password"
                     };
                 }
-                Guid userID =await _loginWriter.ResetFailedAttempts(Email);
+                Guid userID = await _loginWriter.ResetFailedAttempts(Email);
 
                 // get the user role
                 int roleEntity = await _loginWriter.GetUserRole(Email);
@@ -177,6 +189,8 @@ namespace TenzyBackend.Core.Services.TokenService
 
                 //update the and fix the refresh token
                 var result = await _loginWriter.UpdateRefreshToken(Email, refreshTokenHash);
+
+                await _auditWriter.LogLoginAttemptAsync(Email, true, userId: userID);
 
                 return new RegistrationResultModel
                 {
