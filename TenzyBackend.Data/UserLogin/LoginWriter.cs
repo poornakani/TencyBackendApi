@@ -445,7 +445,7 @@ namespace TenzyBackend.Data.UserLogin
                     u.CreatedAt,
                     u.LastLoginAt,
                     COUNT(o.Id)                    AS TotalOrders,
-                    COALESCE(SUM(o.TotalAmount), 0) AS TotalSpent,
+                    COALESCE(SUM(o.TotalLkr), 0)    AS TotalSpent,
                     MAX(o.CreatedAt)               AS LastOrderDate
                 FROM Users u
                 INNER JOIN UserRoles ur ON ur.UserId = u.Id AND ur.RoleId = 2
@@ -478,7 +478,7 @@ namespace TenzyBackend.Data.UserLogin
                     u.CreatedAt,
                     u.LastLoginAt,
                     COUNT(o.Id)                    AS TotalOrders,
-                    COALESCE(SUM(o.TotalAmount), 0) AS TotalSpent,
+                    COALESCE(SUM(o.TotalLkr), 0)    AS TotalSpent,
                     MAX(o.CreatedAt)               AS LastOrderDate
                 FROM Users u
                 INNER JOIN UserRoles ur ON ur.UserId = u.Id AND ur.RoleId = 2
