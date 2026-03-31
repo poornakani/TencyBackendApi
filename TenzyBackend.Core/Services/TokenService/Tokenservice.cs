@@ -274,6 +274,60 @@ namespace TenzyBackend.Core.Services.TokenService
             }
         }
        
+        public async Task<bool> ForgotPasswordAsync(string email)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(email))
+                    return false;
+
+                var user = await _loginWriter.UserfindByEmail(email.Trim().ToLowerInvariant());
+                if (user == null)
+                    return true; // don't reveal whether email exists
+
+                var rawToken = GenerateRefreshToken();
+                var tokenHash = HashRefreshToken(rawToken);
+                var expiresAt = DateTime.UtcNow.AddHours(1);
+
+                await _loginWriter.StoreForgotPasswordTokenAsync(user.Id, tokenHash, expiresAt);
+
+                // TODO: send email with rawToken (e.g. as a reset link query param)
+                // For now, log to console during development:
+                Console.WriteLine($"[ForgotPassword] token for {email}: {rawToken}");
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> ResetPasswordAsync(string token, string newPassword)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(newPassword))
+                    return false;
+
+                var pwdErrors = PasswordValidator.Validate(newPassword);
+                if (pwdErrors.Count > 0)
+                    return false;
+
+                var tokenHash = HashRefreshToken(token);
+                var userId = await _loginWriter.ValidateForgotPasswordTokenAsync(tokenHash);
+                if (userId == null)
+                    return false;
+
+                var newHash = PasswordHasher.Hash(newPassword);
+                return await _loginWriter.ResetPasswordAsync(tokenHash, newHash);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         public Task<string> CreateRefreshToken()
         {
             try

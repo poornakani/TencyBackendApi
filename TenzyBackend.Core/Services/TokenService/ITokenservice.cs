@@ -11,6 +11,7 @@ namespace TenzyBackend.Core.Services.TokenService
         Task<RegistrationResultModel> UserRegistration(UsersModel usersModel);
         Task<RegistrationResultModel> UserLogin(string Email, string Password);
         Task<RegistrationResultModel> GetRefreshToken(Guid userId, string refreshToken);
-        
+        Task<bool> ForgotPasswordAsync(string email);
+        Task<bool> ResetPasswordAsync(string token, string newPassword);
     }
 }

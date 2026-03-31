@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using TenzyBackend.Entity.Enums;
 using TenzyBackend.Entity.UserEntity;
+using TenzyBackend.Models.UserModel;
 
 namespace TenzyBackend.Data.UserLogin
 {
@@ -25,7 +26,13 @@ namespace TenzyBackend.Data.UserLogin
         Task<RefreshTokenUpdateResultEntity> UpdateRefreshToken(string email, string newHash);
         Task<bool> UpdateToNewrefreshToken(Guid userId, string newHash);
 
-        //delete
+        // customers (admin)
+        Task<List<CustomerAdminModel>> GetAllCustomersAsync(int pageSize, int offset, string? search);
+        Task<CustomerAdminModel?> GetCustomerByIdAsync(Guid userId);
 
+        // forgot password
+        Task StoreForgotPasswordTokenAsync(Guid userId, string tokenHash, DateTime expiresAt);
+        Task<Guid?> ValidateForgotPasswordTokenAsync(string tokenHash);
+        Task<bool> ResetPasswordAsync(string tokenHash, string newPasswordHash);
     }
 }

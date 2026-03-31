@@ -430,6 +430,105 @@ namespace TenzyBackend.Data.UserLogin
             }
         }
 
+        // ── customers (admin) ────────────────────────────────────────────────
+
+        public async Task<List<CustomerAdminModel>> GetAllCustomersAsync(
+            int pageSize, int offset, string? search)
+        {
+            const string sql = @"
+                SELECT
+                    u.Id,
+                    u.DisplayName,
+                    u.Email,
+                    u.EmailVerified,
+                    u.Status,
+                    u.CreatedAt,
+                    u.LastLoginAt,
+                    COUNT(o.Id)                    AS TotalOrders,
+                    COALESCE(SUM(o.TotalAmount), 0) AS TotalSpent,
+                    MAX(o.CreatedAt)               AS LastOrderDate
+                FROM Users u
+                INNER JOIN UserRoles ur ON ur.UserId = u.Id AND ur.RoleId = 2
+                LEFT  JOIN Orders  o ON o.UserId = u.Id
+                WHERE (@Search IS NULL
+                       OR u.DisplayName LIKE '%' + @Search + '%'
+                       OR u.Email       LIKE '%' + @Search + '%')
+                GROUP BY u.Id, u.DisplayName, u.Email, u.EmailVerified,
+                         u.Status, u.CreatedAt, u.LastLoginAt
+                ORDER BY u.CreatedAt DESC
+                OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;";
+
+            var p = new DynamicParameters();
+            p.Add("@Offset",   offset,   DbType.Int32);
+            p.Add("@PageSize", pageSize, DbType.Int32);
+            p.Add("@Search",   search,   DbType.String);
+
+            return await _dapperPro.GetAllAsync<CustomerAdminModel>(sql, p, CommandType.Text);
+        }
+
+        public async Task<CustomerAdminModel?> GetCustomerByIdAsync(Guid userId)
+        {
+            const string sql = @"
+                SELECT
+                    u.Id,
+                    u.DisplayName,
+                    u.Email,
+                    u.EmailVerified,
+                    u.Status,
+                    u.CreatedAt,
+                    u.LastLoginAt,
+                    COUNT(o.Id)                    AS TotalOrders,
+                    COALESCE(SUM(o.TotalAmount), 0) AS TotalSpent,
+                    MAX(o.CreatedAt)               AS LastOrderDate
+                FROM Users u
+                INNER JOIN UserRoles ur ON ur.UserId = u.Id AND ur.RoleId = 2
+                LEFT  JOIN Orders  o ON o.UserId = u.Id
+                WHERE u.Id = @UserId
+                GROUP BY u.Id, u.DisplayName, u.Email, u.EmailVerified,
+                         u.Status, u.CreatedAt, u.LastLoginAt;";
+
+            var p = new DynamicParameters();
+            p.Add("@UserId", userId, DbType.Guid);
+
+            return await _dapperPro.GetAsync<CustomerAdminModel>(sql, p, CommandType.Text);
+        }
+
+        // ── forgot password ───────────────────────────────────────────────────
+
+        public async Task StoreForgotPasswordTokenAsync(
+            Guid userId, string tokenHash, DateTime expiresAt)
+        {
+            var p = new DynamicParameters();
+            p.Add("@UserId",    userId,    DbType.Guid);
+            p.Add("@TokenHash", tokenHash, DbType.String);
+            p.Add("@ExpiresAt", expiresAt, DbType.DateTime2);
+
+            await _dapperPro.ExecuteAsync(
+                "spPasswordResetToken_Insert", p, CommandType.StoredProcedure);
+        }
+
+        public async Task<Guid?> ValidateForgotPasswordTokenAsync(string tokenHash)
+        {
+            var p = new DynamicParameters();
+            p.Add("@TokenHash", tokenHash,       DbType.String);
+            p.Add("@Now",       DateTime.UtcNow, DbType.DateTime2);
+
+            return await _dapperPro.GetAsync<Guid?>(
+                "spPasswordResetToken_Validate", p, CommandType.StoredProcedure);
+        }
+
+        public async Task<bool> ResetPasswordAsync(string tokenHash, string newPasswordHash)
+        {
+            var p = new DynamicParameters();
+            p.Add("@TokenHash",       tokenHash,       DbType.String);
+            p.Add("@NewPasswordHash", newPasswordHash, DbType.String);
+            p.Add("@Now",             DateTime.UtcNow, DbType.DateTime2);
+
+            var rows = await _dapperPro.ExecuteAsync(
+                "spUser_UpdatePassword", p, CommandType.StoredProcedure);
+            return rows > 0;
+        }
+
         private class RefreshSessionRow
         {
             public Guid Id { get; set; }

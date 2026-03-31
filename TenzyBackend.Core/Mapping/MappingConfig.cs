@@ -4,12 +4,16 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using TenzyBackend.Entity.AuditEntity;
+using TenzyBackend.Entity.DispatchEntity;
 using TenzyBackend.Entity.Enums;
+using TenzyBackend.Entity.OrderEntity;
 using TenzyBackend.Entity.ProcurementEntity;
 using TenzyBackend.Entity.ProductsEntity;
 using TenzyBackend.Entity.UserEntity;
 using TenzyBackend.Models.AuditModels;
+using TenzyBackend.Models.DispatchModels;
 using TenzyBackend.Models.Enums;
+using TenzyBackend.Models.OrderModels;
 using TenzyBackend.Models.ProcurementModels;
 using TenzyBackend.Models.ProductsModels;
 using TenzyBackend.Models.UserModel;
@@ -41,6 +45,18 @@ namespace TenzyBackend.Core.Mapping
                     .ForMember(d => d.Items, opt => opt.Ignore())
                     .ReverseMap();
                 x.CreateMap<ProcurementItemEntity, ProcurementItemModel>().ReverseMap();
+
+                // Orders
+                x.CreateMap<OrderEntity, OrderModel>()
+                    .ForMember(d => d.Items, opt => opt.Ignore())
+                    .ReverseMap();
+                x.CreateMap<OrderItemEntity, OrderItemModel>().ReverseMap();
+
+                // Reviews
+                x.CreateMap<ProductReviewFullEntity, ProductReviewModel>().ReverseMap();
+
+                // Dispatch
+                x.CreateMap<DispatchEntity, DispatchModel>().ReverseMap();
 
                 // Audit (new)
                 x.CreateMap<AdminAuditLogEntity, AdminAuditLogModel>().ReverseMap();

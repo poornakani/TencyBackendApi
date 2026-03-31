@@ -134,6 +134,52 @@ namespace TencyBackendApi.Controllers
 
         }
 
+        [HttpPost("forgot-password")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+        {
+            var api = new ApiResponseModel();
+            if (string.IsNullOrWhiteSpace(request?.Email))
+            {
+                api.result = false;
+                api.message = "Email is required.";
+                return BadRequest(api);
+            }
+
+            await _tokenservice.ForgotPasswordAsync(request.Email);
+
+            // Always return success to avoid email enumeration
+            api.result = true;
+            api.message = "If that email exists, a reset link has been sent.";
+            return Ok(api);
+        }
+
+        [HttpPost("reset-password")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+        {
+            var api = new ApiResponseModel();
+            if (string.IsNullOrWhiteSpace(request?.Token) ||
+                string.IsNullOrWhiteSpace(request.NewPassword))
+            {
+                api.result = false;
+                api.message = "Token and new password are required.";
+                return BadRequest(api);
+            }
+
+            var ok = await _tokenservice.ResetPasswordAsync(request.Token, request.NewPassword);
+            if (!ok)
+            {
+                api.result = false;
+                api.message = "Invalid or expired reset token.";
+                return BadRequest(api);
+            }
+
+            api.result = true;
+            api.message = "Password reset successfully.";
+            return Ok(api);
+        }
+
         [HttpPost("refreshtoken")]
         [AllowAnonymous]
         public async Task<IActionResult> UserRefreshToken([FromBody] RefreshTokenReqDto refreshTokenReqDto)
