@@ -365,6 +365,7 @@ FodyWeavers.xsd
 secrets.json
 appsettings.Local.json
 appsettings.*.Local.json
+appsettings.Production.json
 **/Properties/launchSettings.json
 
 # dotnet user-secrets store (OS-level, not in repo)
