@@ -42,6 +42,7 @@ IF OBJECT_ID('dbo.sp_UpdatePaymentType',             'P') IS NOT NULL DROP PROCE
 IF OBJECT_ID('dbo.sp_DeactivePaymentType',           'P') IS NOT NULL DROP PROCEDURE dbo.sp_DeactivePaymentType;
 IF OBJECT_ID('dbo.sp_ActivePaymentType',             'P') IS NOT NULL DROP PROCEDURE dbo.sp_ActivePaymentType;
 IF OBJECT_ID('dbo.spProductCatalog_GetAll',          'P') IS NOT NULL DROP PROCEDURE dbo.spProductCatalog_GetAll;
+IF OBJECT_ID('dbo.spProductCatalog_GetAllAdmin',     'P') IS NOT NULL DROP PROCEDURE dbo.spProductCatalog_GetAllAdmin;
 IF OBJECT_ID('dbo.spProductCatalog_GetById',         'P') IS NOT NULL DROP PROCEDURE dbo.spProductCatalog_GetById;
 IF OBJECT_ID('dbo.spProductCatalog_Insert',          'P') IS NOT NULL DROP PROCEDURE dbo.spProductCatalog_Insert;
 IF OBJECT_ID('dbo.spProductCatalog_Update',          'P') IS NOT NULL DROP PROCEDURE dbo.spProductCatalog_Update;
@@ -970,6 +971,47 @@ BEGIN
         AND pr.StartUTC <= SYSUTCDATETIME()
         AND (pr.EndUTC IS NULL OR pr.EndUTC >= SYSUTCDATETIME())
     WHERE p.insale = 1
+    ORDER BY p.createdate DESC;
+END
+GO
+
+-- Admin version: returns ALL products regardless of insale status
+CREATE PROCEDURE dbo.spProductCatalog_GetAllAdmin
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT
+        p.productid,
+        p.name,
+        p.brandid,
+        b.name             AS BrandName,
+        p.categoryid,
+        c.categorytype     AS CategoryName,
+        p.description,
+        p.weight,
+        p.insale,
+        p.createdate,
+        p.lastupdated,
+        ISNULL(inv.stock, 0)          AS StockQuantity,
+        ISNULL(pr.price, 0)           AS SellingPrice,
+        ISNULL(
+            ROUND(pr.price / NULLIF(1.0 - pr.discountrate / 100.0, 0), 2),
+            ISNULL(pr.price, 0)
+        )                             AS OriginalPrice,
+        ISNULL(pr.discountrate, 0)    AS DiscountRate,
+        pr.StartUTC,
+        pr.EndUTC,
+        (SELECT TOP 1 ImageUrl
+         FROM dbo.ProductImages pi2
+         WHERE pi2.productid = p.productid AND pi2.IsPrimary = 1 AND pi2.IsActive = 1
+        )                             AS PrimaryImageUrl
+    FROM dbo.ProductCatalog p
+    LEFT JOIN dbo.Brand          b   ON b.Brandid      = p.brandid    AND b.Isactive  = 1
+    LEFT JOIN dbo.Category       c   ON c.catagoryID   = p.categoryid AND c.IsActive  = 1
+    LEFT JOIN dbo.ProductInventory inv ON inv.ProductId = p.productid
+    LEFT JOIN dbo.ProductPricing   pr  ON pr.ProductId = p.productid
+        AND pr.StartUTC <= SYSUTCDATETIME()
+        AND (pr.EndUTC IS NULL OR pr.EndUTC >= SYSUTCDATETIME())
     ORDER BY p.createdate DESC;
 END
 GO

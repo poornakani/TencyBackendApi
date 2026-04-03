@@ -30,6 +30,12 @@ namespace TenzyBackend.Core.Services.ProductsService.ProductCatalogService
             return _mapper.Map<List<ProductCatalogEntity>, List<ProductCatalogModel>>(entities);
         }
 
+        public async Task<List<ProductCatalogModel>> GetAllProductsAdminAsync()
+        {
+            var entities = await _reader.GetAllAdminAsync();
+            return _mapper.Map<List<ProductCatalogEntity>, List<ProductCatalogModel>>(entities);
+        }
+
         public async Task<ProductCatalogModel> GetProductByIdAsync(int productId)
         {
             if (productId <= 0)

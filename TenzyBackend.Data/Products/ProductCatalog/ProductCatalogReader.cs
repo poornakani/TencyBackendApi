@@ -18,5 +18,13 @@ namespace TenzyBackend.Data.Products.ProductCatalog
         protected override string GetByIdProcedureName => "spProductCatalog_GetById";
         protected override string GetAllProcedureName  => "spProductCatalog_GetAll";
         protected override string IdParameterName      => "@ProductId";
+
+        public async Task<List<ProductCatalogEntity>> GetAllAdminAsync()
+        {
+            var result = await _dapperPro.GetAllAsync<ProductCatalogEntity>(
+                "spProductCatalog_GetAllAdmin",
+                commandType: CommandType.StoredProcedure);
+            return result.ToList();
+        }
     }
 }

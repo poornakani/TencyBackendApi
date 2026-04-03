@@ -17,12 +17,21 @@ namespace TencyBackendApi.Controllers
             _productService = productService;
         }
 
-        // GET /api/products — public, used by storefront
+        // GET /api/products — public, used by storefront (insale only)
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> GetAll()
         {
             var result = await _productService.GetAllProductsAsync();
+            return Ok(new ApiResponseModel { result = true, response = result });
+        }
+
+        // GET /api/products/admin — admin only, returns all products regardless of insale
+        [HttpGet("admin")]
+        [Authorize(Roles = "3")]
+        public async Task<IActionResult> GetAllAdmin()
+        {
+            var result = await _productService.GetAllProductsAdminAsync();
             return Ok(new ApiResponseModel { result = true, response = result });
         }
 
