@@ -41,6 +41,7 @@ namespace TenzyBackend.Models.ProductsModels
         public decimal SellingPrice { get; set; }
         public decimal OriginalPrice { get; set; }
         public int StockQuantity { get; set; }
+        public List<int>? ConcernTypeIds { get; set; }
     }
 
     public class UpdateProductRequest
@@ -55,5 +56,6 @@ namespace TenzyBackend.Models.ProductsModels
         public decimal? SellingPrice { get; set; }
         public decimal? OriginalPrice { get; set; }
         public int? StockQuantity { get; set; }
+        public List<int>? ConcernTypeIds { get; set; }
     }
 }

@@ -116,7 +116,7 @@ IF OBJECT_ID('dbo.ProductImages',         'U') IS NOT NULL DROP TABLE dbo.Produc
 IF OBJECT_ID('dbo.ProductPricing',        'U') IS NOT NULL DROP TABLE dbo.ProductPricing;
 IF OBJECT_ID('dbo.ProductInventory',      'U') IS NOT NULL DROP TABLE dbo.ProductInventory;
 IF OBJECT_ID('dbo.ProductCatalog',        'U') IS NOT NULL DROP TABLE dbo.ProductCatalog;
-IF OBJECT_ID('dbo.ConcernType',           'U') IS NOT NULL DROP TABLE dbo.ConcernType;
+IF OBJECT_ID('dbo.ConcernTypes',          'U') IS NOT NULL DROP TABLE dbo.ConcernTypes;
 IF OBJECT_ID('dbo.PaymentType',           'U') IS NOT NULL DROP TABLE dbo.PaymentType;
 IF OBJECT_ID('dbo.Brand',                 'U') IS NOT NULL DROP TABLE dbo.Brand;
 IF OBJECT_ID('dbo.Category',              'U') IS NOT NULL DROP TABLE dbo.Category;
@@ -222,9 +222,9 @@ CREATE TABLE dbo.Category (
 GO
 
 -- ----------------------------------------------------------------
--- dbo.ConcernType  (column "ConcernType" is the name column)
+-- dbo.ConcernTypes  (column "ConcernType" is the name column)
 -- ----------------------------------------------------------------
-CREATE TABLE dbo.ConcernType (
+CREATE TABLE dbo.ConcernTypes (
     ConcernTypeId INT           NOT NULL IDENTITY(1,1) PRIMARY KEY,
     ConcernType   NVARCHAR(200) NOT NULL,
     description   NVARCHAR(500) NULL,
@@ -318,14 +318,14 @@ CREATE TABLE dbo.ProductFAQ (
 GO
 
 -- ----------------------------------------------------------------
--- dbo.ProductConcerns  (concernID FK → ConcernType.ConcernTypeId)
+-- dbo.ProductConcerns  (concernID FK → ConcernTypes.ConcernTypeId)
 -- ----------------------------------------------------------------
 CREATE TABLE dbo.ProductConcerns (
     productid INT NOT NULL,
     concernID INT NOT NULL,
     CONSTRAINT PK_ProductConcerns          PRIMARY KEY (productid, concernID),
     CONSTRAINT FK_ProductConcerns_Product     FOREIGN KEY (productid) REFERENCES dbo.ProductCatalog(productid),
-    CONSTRAINT FK_ProductConcerns_ConcernType FOREIGN KEY (concernID)  REFERENCES dbo.ConcernType(ConcernTypeId)
+    CONSTRAINT FK_ProductConcerns_ConcernType FOREIGN KEY (concernID)  REFERENCES dbo.ConcernTypes(ConcernTypeId)
 );
 GO
 
@@ -802,7 +802,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
     SELECT ConcernTypeId, ConcernType, description, IsActive
-    FROM   dbo.ConcernType
+    FROM   dbo.ConcernTypes
     WHERE  IsActive = 1
     ORDER BY ConcernType;
 END
@@ -814,7 +814,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
     SELECT ConcernTypeId, ConcernType, description, IsActive
-    FROM   dbo.ConcernType
+    FROM   dbo.ConcernTypes
     WHERE  ConcernTypeId = @ConcernTypeId;
 END
 GO
@@ -825,7 +825,7 @@ CREATE PROCEDURE dbo.sp_ConcernType_Create
 AS
 BEGIN
     SET NOCOUNT ON;
-    INSERT INTO dbo.ConcernType (ConcernType, description)
+    INSERT INTO dbo.ConcernTypes (ConcernType, description)
     VALUES (@ConcernType, @Description);
     SELECT CAST(SCOPE_IDENTITY() AS INT) AS ConcernTypeId;
 END
@@ -838,7 +838,7 @@ CREATE PROCEDURE dbo.sp_ConcernType_Update
 AS
 BEGIN
     SET NOCOUNT ON;
-    UPDATE dbo.ConcernType
+    UPDATE dbo.ConcernTypes
     SET    ConcernType = @ConcernType,
            description = @Description
     WHERE  ConcernTypeId = @ConcernTypeId;
@@ -850,7 +850,7 @@ CREATE PROCEDURE dbo.sp_ConcernType_Deactivate
 AS
 BEGIN
     SET NOCOUNT ON;
-    UPDATE dbo.ConcernType SET IsActive = 0 WHERE ConcernTypeId = @ConcernTypeId;
+    UPDATE dbo.ConcernTypes SET IsActive = 0 WHERE ConcernTypeId = @ConcernTypeId;
 END
 GO
 
@@ -859,7 +859,7 @@ CREATE PROCEDURE dbo.sp_ConcernType_Activate
 AS
 BEGIN
     SET NOCOUNT ON;
-    UPDATE dbo.ConcernType SET IsActive = 1 WHERE ConcernTypeId = @ConcernTypeId;
+    UPDATE dbo.ConcernTypes SET IsActive = 1 WHERE ConcernTypeId = @ConcernTypeId;
 END
 GO
 
@@ -1068,9 +1068,9 @@ BEGIN
     WHERE  productid = @ProductId AND IsActive = 1;
 
     -- Result set 6: concerns
-    SELECT pc.productid, pc.concernID, ct.ConcernType
+    SELECT pc.productid, pc.concernID AS ConcernTypeId, ct.ConcernType
     FROM   dbo.ProductConcerns pc
-    JOIN   dbo.ConcernType ct ON ct.ConcernTypeId = pc.concernID
+    JOIN   dbo.ConcernTypes ct ON ct.ConcernTypeId = pc.concernID
     WHERE  pc.productid = @ProductId;
 
     -- Result set 7: payment options
@@ -1082,15 +1082,16 @@ END
 GO
 
 CREATE PROCEDURE dbo.spProductCatalog_Insert
-    @Name          NVARCHAR(300),
-    @BrandId       INT,
-    @CategoryId    INT,
-    @Description   NVARCHAR(MAX) = NULL,
-    @Weight        DECIMAL(18,3) = NULL,
-    @InSale        BIT           = 1,
-    @SellingPrice  DECIMAL(18,2) = 0,
-    @OriginalPrice DECIMAL(18,2) = 0,
-    @StockQuantity INT           = 0
+    @Name           NVARCHAR(300),
+    @BrandId        INT,
+    @CategoryId     INT,
+    @Description    NVARCHAR(MAX)  = NULL,
+    @Weight         DECIMAL(18,3)  = NULL,
+    @InSale         BIT            = 1,
+    @SellingPrice   DECIMAL(18,2)  = 0,
+    @OriginalPrice  DECIMAL(18,2)  = 0,
+    @StockQuantity  INT            = 0,
+    @ConcernTypeIds NVARCHAR(MAX)  = NULL   -- comma-separated list e.g. '1,2,3'
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -1110,21 +1111,35 @@ BEGIN
     INSERT INTO dbo.ProductPricing (ProductId, price, discountrate, StartUTC, createdate, lastupdated)
     VALUES (@ProductId, @SellingPrice, @DiscountRate, SYSUTCDATETIME(), SYSUTCDATETIME(), SYSUTCDATETIME());
 
+    -- Insert concern types (ignores invalid IDs)
+    IF @ConcernTypeIds IS NOT NULL AND LEN(TRIM(@ConcernTypeIds)) > 0
+    BEGIN
+        INSERT INTO dbo.ProductConcerns (productid, concernID)
+        SELECT @ProductId, CAST(value AS INT)
+        FROM   STRING_SPLIT(@ConcernTypeIds, ',')
+        WHERE  TRIM(value) <> ''
+          AND  EXISTS (
+              SELECT 1 FROM dbo.ConcernTypes ct
+              WHERE  ct.ConcernTypeId = CAST(value AS INT)
+          );
+    END
+
     SELECT @ProductId AS productid;
 END
 GO
 
 CREATE PROCEDURE dbo.spProductCatalog_Update
-    @ProductId     INT,
-    @Name          NVARCHAR(300),
-    @BrandId       INT,
-    @CategoryId    INT,
-    @Description   NVARCHAR(MAX) = NULL,
-    @Weight        DECIMAL(18,3) = NULL,
-    @InSale        BIT           = 1,
-    @SellingPrice  DECIMAL(18,2) = 0,
-    @OriginalPrice DECIMAL(18,2) = 0,
-    @StockQuantity INT           = NULL
+    @ProductId      INT,
+    @Name           NVARCHAR(300),
+    @BrandId        INT,
+    @CategoryId     INT,
+    @Description    NVARCHAR(MAX)  = NULL,
+    @Weight         DECIMAL(18,3)  = NULL,
+    @InSale         BIT            = 1,
+    @SellingPrice   DECIMAL(18,2)  = 0,
+    @OriginalPrice  DECIMAL(18,2)  = 0,
+    @StockQuantity  INT            = NULL,
+    @ConcernTypeIds NVARCHAR(MAX)  = NULL   -- comma-separated; NULL = leave unchanged
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -1134,10 +1149,14 @@ BEGIN
              ELSE 0 END;
 
     UPDATE dbo.ProductCatalog
-    SET    name = @Name, brandid = @BrandId, categoryid = @CategoryId,
-           description = @Description, weight = @Weight, insale = @InSale,
+    SET    name        = @Name,
+           brandid     = @BrandId,
+           categoryid  = @CategoryId,
+           description = @Description,
+           weight      = @Weight,
+           insale      = @InSale,
            lastupdated = SYSUTCDATETIME()
-    WHERE  productid = @ProductId;
+    WHERE  productid   = @ProductId;
 
     IF @StockQuantity IS NOT NULL
         UPDATE dbo.ProductInventory
@@ -1145,10 +1164,30 @@ BEGIN
         WHERE  ProductId = @ProductId;
 
     UPDATE dbo.ProductPricing
-    SET    price = @SellingPrice, discountrate = @DiscountRate, lastupdated = SYSUTCDATETIME()
+    SET    price        = @SellingPrice,
+           discountrate = @DiscountRate,
+           lastupdated  = SYSUTCDATETIME()
     WHERE  ProductId = @ProductId
       AND  StartUTC <= SYSUTCDATETIME()
       AND  (EndUTC IS NULL OR EndUTC >= SYSUTCDATETIME());
+
+    -- Replace concern associations when a list is supplied
+    IF @ConcernTypeIds IS NOT NULL
+    BEGIN
+        DELETE FROM dbo.ProductConcerns WHERE productid = @ProductId;
+
+        IF LEN(TRIM(@ConcernTypeIds)) > 0
+        BEGIN
+            INSERT INTO dbo.ProductConcerns (productid, concernID)
+            SELECT @ProductId, CAST(value AS INT)
+            FROM   STRING_SPLIT(@ConcernTypeIds, ',')
+            WHERE  TRIM(value) <> ''
+              AND  EXISTS (
+                  SELECT 1 FROM dbo.ConcernTypes ct
+                  WHERE  ct.ConcernTypeId = CAST(value AS INT)
+              );
+        END
+    END
 END
 GO
 
@@ -1967,14 +2006,14 @@ INSERT INTO dbo.Category (categorytype, IsActive) VALUES ('Toners', 1);
 GO
 
 -- Concern Types
-INSERT INTO dbo.ConcernType (ConcernType, description, IsActive) VALUES ('Anti-Aging',        'Reduces fine lines and wrinkles', 1);
-INSERT INTO dbo.ConcernType (ConcernType, description, IsActive) VALUES ('Acne-Prone',        'Controls breakouts and excess oil', 1);
-INSERT INTO dbo.ConcernType (ConcernType, description, IsActive) VALUES ('Dryness',           'Intense hydration for dry skin', 1);
-INSERT INTO dbo.ConcernType (ConcernType, description, IsActive) VALUES ('Brightening',       'Evens skin tone and adds radiance', 1);
-INSERT INTO dbo.ConcernType (ConcernType, description, IsActive) VALUES ('Sensitive Skin',    'Gentle formulas for reactive skin', 1);
-INSERT INTO dbo.ConcernType (ConcernType, description, IsActive) VALUES ('Dark Spots',        'Fades hyperpigmentation', 1);
-INSERT INTO dbo.ConcernType (ConcernType, description, IsActive) VALUES ('Sun Damage',        'Repairs UV-related damage', 1);
-INSERT INTO dbo.ConcernType (ConcernType, description, IsActive) VALUES ('Oily Skin',         'Mattifies and controls shine', 1);
+INSERT INTO dbo.ConcernTypes (ConcernType, description, IsActive) VALUES ('Anti-Aging',        'Reduces fine lines and wrinkles', 1);
+INSERT INTO dbo.ConcernTypes (ConcernType, description, IsActive) VALUES ('Acne-Prone',        'Controls breakouts and excess oil', 1);
+INSERT INTO dbo.ConcernTypes (ConcernType, description, IsActive) VALUES ('Dryness',           'Intense hydration for dry skin', 1);
+INSERT INTO dbo.ConcernTypes (ConcernType, description, IsActive) VALUES ('Brightening',       'Evens skin tone and adds radiance', 1);
+INSERT INTO dbo.ConcernTypes (ConcernType, description, IsActive) VALUES ('Sensitive Skin',    'Gentle formulas for reactive skin', 1);
+INSERT INTO dbo.ConcernTypes (ConcernType, description, IsActive) VALUES ('Dark Spots',        'Fades hyperpigmentation', 1);
+INSERT INTO dbo.ConcernTypes (ConcernType, description, IsActive) VALUES ('Sun Damage',        'Repairs UV-related damage', 1);
+INSERT INTO dbo.ConcernTypes (ConcernType, description, IsActive) VALUES ('Oily Skin',         'Mattifies and controls shine', 1);
 GO
 
 -- Brands
