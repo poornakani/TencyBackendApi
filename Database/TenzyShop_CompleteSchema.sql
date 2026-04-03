@@ -931,16 +931,45 @@ GO
 
 -- ================================================================
 -- PRODUCT CATALOG
--- Pricing: price=SellingPrice, discountrate=(OriginalPrice-SellingPrice)/OriginalPrice*100
+-- Pricing: price = selling price stored; discountrate = % off; OriginalPrice back-calculated
 -- ================================================================
 CREATE PROCEDURE dbo.spProductCatalog_GetAll
 AS
 BEGIN
     SET NOCOUNT ON;
-    SELECT p.productid, p.name, p.brandid, p.categoryid, p.description,
-           p.weight, p.insale, p.createdate, p.lastupdated
-    FROM   dbo.ProductCatalog p
-    WHERE  p.insale = 1
+    SELECT
+        p.productid,
+        p.name,
+        p.brandid,
+        b.name             AS BrandName,
+        p.categoryid,
+        c.categorytype     AS CategoryName,
+        p.description,
+        p.weight,
+        p.insale,
+        p.createdate,
+        p.lastupdated,
+        ISNULL(inv.stock, 0)          AS StockQuantity,
+        ISNULL(pr.price, 0)           AS SellingPrice,
+        ISNULL(
+            ROUND(pr.price / NULLIF(1.0 - pr.discountrate / 100.0, 0), 2),
+            ISNULL(pr.price, 0)
+        )                             AS OriginalPrice,
+        ISNULL(pr.discountrate, 0)    AS DiscountRate,
+        pr.StartUTC,
+        pr.EndUTC,
+        (SELECT TOP 1 ImageUrl
+         FROM dbo.ProductImages pi2
+         WHERE pi2.productid = p.productid AND pi2.IsPrimary = 1 AND pi2.IsActive = 1
+        )                             AS PrimaryImageUrl
+    FROM dbo.ProductCatalog p
+    LEFT JOIN dbo.Brand          b   ON b.Brandid      = p.brandid    AND b.Isactive  = 1
+    LEFT JOIN dbo.Category       c   ON c.catagoryID   = p.categoryid AND c.IsActive  = 1
+    LEFT JOIN dbo.ProductInventory inv ON inv.ProductId = p.productid
+    LEFT JOIN dbo.ProductPricing   pr  ON pr.ProductId = p.productid
+        AND pr.StartUTC <= SYSUTCDATETIME()
+        AND (pr.EndUTC IS NULL OR pr.EndUTC >= SYSUTCDATETIME())
+    WHERE p.insale = 1
     ORDER BY p.createdate DESC;
 END
 GO
@@ -950,27 +979,42 @@ CREATE PROCEDURE dbo.spProductCatalog_GetById
 AS
 BEGIN
     SET NOCOUNT ON;
-    -- Result set 1: product
-    SELECT p.productid, p.name, p.brandid, p.categoryid, p.description,
-           p.weight, p.insale, p.createdate, p.lastupdated
-    FROM   dbo.ProductCatalog p
+    -- Result set 1: product (same full join as GetAll)
+    SELECT
+        p.productid,
+        p.name,
+        p.brandid,
+        b.name             AS BrandName,
+        p.categoryid,
+        c.categorytype     AS CategoryName,
+        p.description,
+        p.weight,
+        p.insale,
+        p.createdate,
+        p.lastupdated,
+        ISNULL(inv.stock, 0)          AS StockQuantity,
+        ISNULL(pr.price, 0)           AS SellingPrice,
+        ISNULL(
+            ROUND(pr.price / NULLIF(1.0 - pr.discountrate / 100.0, 0), 2),
+            ISNULL(pr.price, 0)
+        )                             AS OriginalPrice,
+        ISNULL(pr.discountrate, 0)    AS DiscountRate,
+        pr.StartUTC,
+        pr.EndUTC,
+        (SELECT TOP 1 ImageUrl
+         FROM dbo.ProductImages pi2
+         WHERE pi2.productid = p.productid AND pi2.IsPrimary = 1 AND pi2.IsActive = 1
+        )                             AS PrimaryImageUrl
+    FROM dbo.ProductCatalog p
+    LEFT JOIN dbo.Brand          b   ON b.Brandid      = p.brandid    AND b.Isactive  = 1
+    LEFT JOIN dbo.Category       c   ON c.catagoryID   = p.categoryid AND c.IsActive  = 1
+    LEFT JOIN dbo.ProductInventory inv ON inv.ProductId = p.productid
+    LEFT JOIN dbo.ProductPricing   pr  ON pr.ProductId = p.productid
+        AND pr.StartUTC <= SYSUTCDATETIME()
+        AND (pr.EndUTC IS NULL OR pr.EndUTC >= SYSUTCDATETIME())
     WHERE  p.productid = @ProductId;
 
-    -- Result set 2: active pricing
-    SELECT pr.PricingId, pr.ProductId, pr.price AS SellingPrice,
-           ROUND(pr.price / NULLIF(1.0 - pr.discountrate / 100.0, 0), 2) AS OriginalPrice,
-           pr.discountrate, pr.StartUTC, pr.EndUTC
-    FROM   dbo.ProductPricing pr
-    WHERE  pr.ProductId = @ProductId
-      AND  pr.StartUTC <= SYSUTCDATETIME()
-      AND  (pr.EndUTC IS NULL OR pr.EndUTC >= SYSUTCDATETIME());
-
-    -- Result set 3: inventory
-    SELECT ProductId, stock AS StockQuantity, LastStockUpdateUTC
-    FROM   dbo.ProductInventory
-    WHERE  ProductId = @ProductId;
-
-    -- Result set 4: images
+    -- Result set 2: images
     SELECT ImageId, productid, ImageUrl, IsPrimary, SortOrder, createdate, IsActive
     FROM   dbo.ProductImages
     WHERE  productid = @ProductId AND IsActive = 1
@@ -1037,7 +1081,8 @@ CREATE PROCEDURE dbo.spProductCatalog_Update
     @Weight        DECIMAL(18,3) = NULL,
     @InSale        BIT           = 1,
     @SellingPrice  DECIMAL(18,2) = 0,
-    @OriginalPrice DECIMAL(18,2) = 0
+    @OriginalPrice DECIMAL(18,2) = 0,
+    @StockQuantity INT           = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -1051,6 +1096,11 @@ BEGIN
            description = @Description, weight = @Weight, insale = @InSale,
            lastupdated = SYSUTCDATETIME()
     WHERE  productid = @ProductId;
+
+    IF @StockQuantity IS NOT NULL
+        UPDATE dbo.ProductInventory
+        SET    stock = @StockQuantity, LastStockUpdateUTC = SYSUTCDATETIME()
+        WHERE  ProductId = @ProductId;
 
     UPDATE dbo.ProductPricing
     SET    price = @SellingPrice, discountrate = @DiscountRate, lastupdated = SYSUTCDATETIME()

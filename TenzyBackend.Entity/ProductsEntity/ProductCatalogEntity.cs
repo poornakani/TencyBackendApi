@@ -51,5 +51,9 @@ namespace TenzyBackend.Entity.ProductsEntity
         public int StockQuantity { get; set; }
         public decimal SellingPrice { get; set; }
         public decimal OriginalPrice { get; set; }
+        public decimal DiscountRate { get; set; }
+        public DateTime? StartUTC { get; set; }
+        public DateTime? EndUTC { get; set; }
+        public string? PrimaryImageUrl { get; set; }
     }
 }

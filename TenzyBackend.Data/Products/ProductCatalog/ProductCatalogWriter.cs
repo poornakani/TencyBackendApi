@@ -44,6 +44,7 @@ namespace TenzyBackend.Data.Products.ProductCatalog
             p.Add("@InSale",        request.InSale,        DbType.Boolean);
             p.Add("@SellingPrice",  request.SellingPrice,  DbType.Decimal);
             p.Add("@OriginalPrice", request.OriginalPrice, DbType.Decimal);
+            p.Add("@StockQuantity", request.StockQuantity, DbType.Int32);
 
             int rows = await _dapper.UpdateAsync<int>(
                 "spProductCatalog_Update", p, CommandType.StoredProcedure);
