@@ -142,6 +142,13 @@ app.UseMiddleware<AuthRateLimitMiddleware>();
 
 app.UseCors("AllowFrontend");
 app.UseHttpsRedirection();
+
+// Ensure wwwroot/images exists so UseStaticFiles() works on first deploy
+var imagesPath = Path.Combine(app.Environment.WebRootPath
+                              ?? Path.Combine(app.Environment.ContentRootPath, "wwwroot"), "images");
+Directory.CreateDirectory(imagesPath);
+app.UseStaticFiles();   // serves wwwroot/ — product & brand images live at /images/*
+
 app.UseAuthentication();
 app.UseAuthorization();
 

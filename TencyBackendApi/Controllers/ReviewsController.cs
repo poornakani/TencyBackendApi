@@ -31,7 +31,7 @@ namespace TencyBackendApi.Controllers
 
         // GET /api/reviews — admin list, ?page=1&pageSize=50&isApproved=true/false/null
         [HttpGet]
-        [Authorize(Roles = "1")]
+        [Authorize(Roles = "3")]
         public async Task<IActionResult> GetAll(
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 50,
@@ -60,7 +60,7 @@ namespace TencyBackendApi.Controllers
 
         // PATCH /api/reviews/{id}/moderate — admin approve/reject
         [HttpPatch("{id:int}/moderate")]
-        [Authorize(Roles = "1")]
+        [Authorize(Roles = "3")]
         public async Task<IActionResult> Moderate(int id, [FromBody] ModerateReviewRequest request)
         {
             await _reviewService.ModerateReviewAsync(id, request.IsApproved);

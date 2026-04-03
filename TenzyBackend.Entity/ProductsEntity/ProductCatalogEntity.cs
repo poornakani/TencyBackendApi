@@ -44,5 +44,12 @@ namespace TenzyBackend.Entity.ProductsEntity
         public virtual BrandEntity? Brand { get; set; }
 
         public virtual CategoryEntity? Category { get; set; }
+
+        // Populated by stored procedures via JOIN — not EF columns
+        public string? BrandName { get; set; }
+        public string? CategoryName { get; set; }
+        public int StockQuantity { get; set; }
+        public decimal SellingPrice { get; set; }
+        public decimal OriginalPrice { get; set; }
     }
 }

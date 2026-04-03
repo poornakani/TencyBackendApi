@@ -11,7 +11,7 @@ namespace TencyBackendApi.Controllers
 {
     [Route("api/dispatch")]
     [ApiController]
-    [Authorize(Roles = "1")]
+    [Authorize(Roles = "3")]
     public class DispatchController : ControllerBase
     {
         private readonly IDispatchService _dispatchService;

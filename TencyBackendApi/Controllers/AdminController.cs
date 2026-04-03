@@ -8,7 +8,7 @@ namespace TencyBackendApi.Controllers
 {
     [Route("api/admin")]
     [ApiController]
-    [Authorize(Roles = "1")]
+    [Authorize(Roles = "3")]
     public class AdminController : ControllerBase
     {
         private readonly IAuditService _auditService;

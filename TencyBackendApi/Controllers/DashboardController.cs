@@ -8,7 +8,7 @@ namespace TencyBackendApi.Controllers
 {
     [Route("api/admin/dashboard")]
     [ApiController]
-    [Authorize(Roles = "1")]
+    [Authorize(Roles = "3")]
     public class DashboardController : ControllerBase
     {
         private readonly IDashboardService _dashboardService;

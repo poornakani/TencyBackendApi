@@ -1,9 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
+using Dapper;
+using Microsoft.Extensions.Logging;
 using SharedResources.Infrastructure.Base;
-using System;
 using System.Collections.Generic;
-using System.Text;
-using TenzyBackend.Data.Products.Brand;
+using System.Data;
 using TenzyBackend.DBContext;
 using TenzyBackend.Entity.ProductsEntity;
 
@@ -17,9 +16,29 @@ namespace TenzyBackend.Data.Products.Category
         }
 
         protected override string GetByIdProcedureName => "sp_Category_GetById";
+        protected override string GetAllProcedureName  => "sp_Category_GetAllActive";
+        protected override string IdParameterName      => "@CategoryId";
 
-        protected override string GetAllProcedureName => "sp_Category_GetAllActive";
+        // Override with raw SQL to fix DB column name typo.
+        // The DB column is "catagoryID" (typo), which Dapper cannot match
+        // to the "CategoryId" property by name, so we alias it explicitly.
+        private const string SelectColumns = @"
+            catagoryID   AS CategoryId,
+            categorytype AS CategoryType,
+            isactive     AS IsActive";
 
-        protected override string IdParameterName => "@CategoryId";
+        public override async Task<List<CategoryEntity>> GetAllAsync()
+        {
+            const string sql = $"SELECT {SelectColumns} FROM dbo.Category WHERE isactive = 1 ORDER BY categorytype";
+            return await _dapperPro.GetAllAsync<CategoryEntity>(sql, commandType: CommandType.Text);
+        }
+
+        public override async Task<CategoryEntity?> GetByIdAsync(int id)
+        {
+            const string sql = $"SELECT {SelectColumns} FROM dbo.Category WHERE catagoryID = @CategoryId";
+            var parms = new DynamicParameters();
+            parms.Add("@CategoryId", id);
+            return await _dapperPro.GetAsync<CategoryEntity>(sql, parms, commandType: CommandType.Text);
+        }
     }
 }

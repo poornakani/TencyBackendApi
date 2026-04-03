@@ -37,7 +37,7 @@ namespace TencyBackendApi.Controllers
 
         // POST /api/products — admin only
         [HttpPost]
-        [Authorize(Roles = "1")]
+        [Authorize(Roles = "3")]
         public async Task<IActionResult> Create([FromBody] CreateProductRequest request)
         {
             var newId = await _productService.CreateProductAsync(request);
@@ -47,7 +47,7 @@ namespace TencyBackendApi.Controllers
 
         // PUT /api/products/{id} — admin only
         [HttpPut("{id:int}")]
-        [Authorize(Roles = "1")]
+        [Authorize(Roles = "3")]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateProductRequest request)
         {
             request.ProductId = id;
@@ -57,7 +57,7 @@ namespace TencyBackendApi.Controllers
 
         // DELETE /api/products/{id} — admin only (soft delete / deactivate)
         [HttpDelete("{id:int}")]
-        [Authorize(Roles = "1")]
+        [Authorize(Roles = "3")]
         public async Task<IActionResult> Deactivate(int id)
         {
             await _productService.DeactivateProductAsync(id);

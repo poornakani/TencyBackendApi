@@ -9,7 +9,7 @@ namespace TencyBackendApi.Controllers
 {
     [Route("api/admin/reports")]
     [ApiController]
-    [Authorize(Roles = "1")]
+    [Authorize(Roles = "3")]
     public class ReportsController : ControllerBase
     {
         private readonly IReportService _reportService;

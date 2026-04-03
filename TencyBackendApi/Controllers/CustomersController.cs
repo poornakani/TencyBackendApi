@@ -7,7 +7,7 @@ namespace TencyBackendApi.Controllers
 {
     [Route("api/admin/customers")]
     [ApiController]
-    [Authorize(Roles = "1")]
+    [Authorize(Roles = "3")]
     public class CustomersController : ControllerBase
     {
         private readonly ICustomerService _customerService;

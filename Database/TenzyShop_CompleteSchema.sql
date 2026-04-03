@@ -662,7 +662,12 @@ CREATE PROCEDURE dbo.sp_Brand_GetAll
 AS
 BEGIN
     SET NOCOUNT ON;
-    SELECT Brandid, name, barndimage, createdate, lastupdated, Isactive
+    SELECT Brandid       AS BrandId,
+           name          AS Name,
+           barndimage    AS BrandImage,
+           createdate    AS CreateDate,
+           lastupdated   AS LastUpdated,
+           Isactive      AS IsActive
     FROM   dbo.Brand
     WHERE  Isactive = 1
     ORDER BY name;
@@ -674,7 +679,12 @@ CREATE PROCEDURE dbo.sp_Brand_GetById
 AS
 BEGIN
     SET NOCOUNT ON;
-    SELECT Brandid, name, barndimage, createdate, lastupdated, Isactive
+    SELECT Brandid       AS BrandId,
+           name          AS Name,
+           barndimage    AS BrandImage,
+           createdate    AS CreateDate,
+           lastupdated   AS LastUpdated,
+           Isactive      AS IsActive
     FROM   dbo.Brand
     WHERE  Brandid = @BrandId;
 END
@@ -723,7 +733,9 @@ CREATE PROCEDURE dbo.sp_Category_GetAllActive
 AS
 BEGIN
     SET NOCOUNT ON;
-    SELECT catagoryID, categorytype, IsActive
+    SELECT catagoryID    AS CategoryId,
+           categorytype  AS CategoryType,
+           IsActive
     FROM   dbo.Category
     WHERE  IsActive = 1
     ORDER BY categorytype;
@@ -735,7 +747,9 @@ CREATE PROCEDURE dbo.sp_Category_GetById
 AS
 BEGIN
     SET NOCOUNT ON;
-    SELECT catagoryID, categorytype, IsActive
+    SELECT catagoryID    AS CategoryId,
+           categorytype  AS CategoryType,
+           IsActive
     FROM   dbo.Category
     WHERE  catagoryID = @CategoryId;
 END
@@ -855,7 +869,9 @@ CREATE PROCEDURE dbo.sp_GetAllPaymentType
 AS
 BEGIN
     SET NOCOUNT ON;
-    SELECT PaymentTypeId, PaymentType, IsActive
+    SELECT PaymentTypeId,
+           PaymentType AS Name,
+           IsActive
     FROM   dbo.PaymentType
     WHERE  IsActive = 1
     ORDER BY PaymentType;
@@ -867,7 +883,9 @@ CREATE PROCEDURE dbo.sp_GetPaymentTypeById
 AS
 BEGIN
     SET NOCOUNT ON;
-    SELECT PaymentTypeId, PaymentType, IsActive
+    SELECT PaymentTypeId,
+           PaymentType AS Name,
+           IsActive
     FROM   dbo.PaymentType
     WHERE  PaymentTypeId = @PaymentTypeId;
 END
@@ -1831,12 +1849,161 @@ END
 GO
 
 -- ================================================================
--- REFERENCE DATA SEED
+-- SECTION 5: SEED DATA
 -- ================================================================
+
+-- Payment Types
 INSERT INTO dbo.PaymentType (PaymentType) VALUES ('Cash on Delivery');
 INSERT INTO dbo.PaymentType (PaymentType) VALUES ('Bank Transfer');
 INSERT INTO dbo.PaymentType (PaymentType) VALUES ('Card Payment');
 INSERT INTO dbo.PaymentType (PaymentType) VALUES ('Online Payment');
+GO
+
+-- Categories
+INSERT INTO dbo.Category (categorytype, IsActive) VALUES ('Skin Care', 1);
+INSERT INTO dbo.Category (categorytype, IsActive) VALUES ('Face Care', 1);
+INSERT INTO dbo.Category (categorytype, IsActive) VALUES ('Body Care', 1);
+INSERT INTO dbo.Category (categorytype, IsActive) VALUES ('Head Care', 1);
+INSERT INTO dbo.Category (categorytype, IsActive) VALUES ('Sun Care', 1);
+INSERT INTO dbo.Category (categorytype, IsActive) VALUES ('Lip Care', 1);
+INSERT INTO dbo.Category (categorytype, IsActive) VALUES ('Hand Care', 1);
+INSERT INTO dbo.Category (categorytype, IsActive) VALUES ('Acne Care', 1);
+INSERT INTO dbo.Category (categorytype, IsActive) VALUES ('Moisturizers', 1);
+INSERT INTO dbo.Category (categorytype, IsActive) VALUES ('Serums', 1);
+INSERT INTO dbo.Category (categorytype, IsActive) VALUES ('Cleansers', 1);
+INSERT INTO dbo.Category (categorytype, IsActive) VALUES ('Toners', 1);
+GO
+
+-- Concern Types
+INSERT INTO dbo.ConcernType (ConcernType, description, IsActive) VALUES ('Anti-Aging',        'Reduces fine lines and wrinkles', 1);
+INSERT INTO dbo.ConcernType (ConcernType, description, IsActive) VALUES ('Acne-Prone',        'Controls breakouts and excess oil', 1);
+INSERT INTO dbo.ConcernType (ConcernType, description, IsActive) VALUES ('Dryness',           'Intense hydration for dry skin', 1);
+INSERT INTO dbo.ConcernType (ConcernType, description, IsActive) VALUES ('Brightening',       'Evens skin tone and adds radiance', 1);
+INSERT INTO dbo.ConcernType (ConcernType, description, IsActive) VALUES ('Sensitive Skin',    'Gentle formulas for reactive skin', 1);
+INSERT INTO dbo.ConcernType (ConcernType, description, IsActive) VALUES ('Dark Spots',        'Fades hyperpigmentation', 1);
+INSERT INTO dbo.ConcernType (ConcernType, description, IsActive) VALUES ('Sun Damage',        'Repairs UV-related damage', 1);
+INSERT INTO dbo.ConcernType (ConcernType, description, IsActive) VALUES ('Oily Skin',         'Mattifies and controls shine', 1);
+GO
+
+-- Brands
+INSERT INTO dbo.Brand (name, barndimage, createdate, Isactive)
+VALUES ('CeraVe',      'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/CeraVe_logo.svg/320px-CeraVe_logo.svg.png', SYSUTCDATETIME(), 1);
+INSERT INTO dbo.Brand (name, barndimage, createdate, Isactive)
+VALUES ('The Ordinary','https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/The_Ordinary_logo.svg/320px-The_Ordinary_logo.svg.png', SYSUTCDATETIME(), 1);
+INSERT INTO dbo.Brand (name, barndimage, createdate, Isactive)
+VALUES ('Neutrogena',  'https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Neutrogena_logo.svg/320px-Neutrogena_logo.svg.png', SYSUTCDATETIME(), 1);
+INSERT INTO dbo.Brand (name, barndimage, createdate, Isactive)
+VALUES ('Cetaphil',    'https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Cetaphil_logo.svg/320px-Cetaphil_logo.svg.png', SYSUTCDATETIME(), 1);
+INSERT INTO dbo.Brand (name, barndimage, createdate, Isactive)
+VALUES ('Aveeno',      'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Aveeno_logo.svg/320px-Aveeno_logo.svg.png', SYSUTCDATETIME(), 1);
+INSERT INTO dbo.Brand (name, barndimage, createdate, Isactive)
+VALUES ('L''Oréal',    NULL, SYSUTCDATETIME(), 1);
+INSERT INTO dbo.Brand (name, barndimage, createdate, Isactive)
+VALUES ('Tenzy',       NULL, SYSUTCDATETIME(), 1);
+GO
+
+-- Products (productid auto-increments starting at 1)
+DECLARE @skincare_cat  INT = (SELECT TOP 1 catagoryID FROM dbo.Category WHERE categorytype = 'Skin Care');
+DECLARE @moisturizer   INT = (SELECT TOP 1 catagoryID FROM dbo.Category WHERE categorytype = 'Moisturizers');
+DECLARE @serum_cat     INT = (SELECT TOP 1 catagoryID FROM dbo.Category WHERE categorytype = 'Serums');
+DECLARE @cleanser_cat  INT = (SELECT TOP 1 catagoryID FROM dbo.Category WHERE categorytype = 'Cleansers');
+DECLARE @suncare_cat   INT = (SELECT TOP 1 catagoryID FROM dbo.Category WHERE categorytype = 'Sun Care');
+DECLARE @body_cat      INT = (SELECT TOP 1 catagoryID FROM dbo.Category WHERE categorytype = 'Body Care');
+
+DECLARE @cerave   INT = (SELECT TOP 1 Brandid FROM dbo.Brand WHERE name = 'CeraVe');
+DECLARE @ordinary INT = (SELECT TOP 1 Brandid FROM dbo.Brand WHERE name = 'The Ordinary');
+DECLARE @neutro   INT = (SELECT TOP 1 Brandid FROM dbo.Brand WHERE name = 'Neutrogena');
+DECLARE @cetaphil INT = (SELECT TOP 1 Brandid FROM dbo.Brand WHERE name = 'Cetaphil');
+DECLARE @aveeno   INT = (SELECT TOP 1 Brandid FROM dbo.Brand WHERE name = 'Aveeno');
+DECLARE @tenzy    INT = (SELECT TOP 1 Brandid FROM dbo.Brand WHERE name = 'Tenzy');
+
+-- Product 1: CeraVe Moisturizing Cream
+INSERT INTO dbo.ProductCatalog (name, brandid, categoryid, description, weight, insale, createdate)
+VALUES ('CeraVe Moisturizing Cream', @cerave, @moisturizer,
+        'A rich moisturizing cream with ceramides and hyaluronic acid to restore the skin''s natural barrier. Fragrance-free and non-comedogenic, suitable for dry to very dry skin.',
+        250.0, 1, SYSUTCDATETIME());
+DECLARE @p1 INT = SCOPE_IDENTITY();
+INSERT INTO dbo.ProductInventory (ProductId, stock) VALUES (@p1, 45);
+INSERT INTO dbo.ProductPricing   (ProductId, price, discountrate, StartUTC) VALUES (@p1, 3200.00, 10.00, SYSUTCDATETIME());
+INSERT INTO dbo.ProductImages    (productid, ImageUrl, IsPrimary, SortOrder) VALUES (@p1, 'https://images.unsplash.com/photo-1620916566393-7c3a4a4f3f10?q=80&w=600', 1, 1);
+INSERT INTO dbo.ProductFAQ       (productid, Question, Answer) VALUES (@p1, 'Is this suitable for sensitive skin?', 'Yes, CeraVe Moisturizing Cream is fragrance-free and developed with dermatologists, making it suitable for sensitive skin.');
+INSERT INTO dbo.ProductFAQ       (productid, Question, Answer) VALUES (@p1, 'Can I use it on my face?', 'Yes, it is non-comedogenic and safe for facial use.');
+
+-- Product 2: The Ordinary Hyaluronic Acid 2% + B5
+INSERT INTO dbo.ProductCatalog (name, brandid, categoryid, description, weight, insale, createdate)
+VALUES ('Hyaluronic Acid 2% + B5', @ordinary, @serum_cat,
+        'Multi-depth hydration serum with low, medium and high molecular weight hyaluronic acid plus Vitamin B5 for immediate and lasting moisture.',
+        30.0, 1, SYSUTCDATETIME());
+DECLARE @p2 INT = SCOPE_IDENTITY();
+INSERT INTO dbo.ProductInventory (ProductId, stock) VALUES (@p2, 60);
+INSERT INTO dbo.ProductPricing   (ProductId, price, discountrate, StartUTC) VALUES (@p2, 1850.00, 0.00, SYSUTCDATETIME());
+INSERT INTO dbo.ProductImages    (productid, ImageUrl, IsPrimary, SortOrder) VALUES (@p2, 'https://images.unsplash.com/photo-1611930022073-b7a4ba5fcccd?q=80&w=600', 1, 1);
+INSERT INTO dbo.ProductFAQ       (productid, Question, Answer) VALUES (@p2, 'How often should I use this?', 'Apply twice daily, morning and evening, before moisturizer.');
+
+-- Product 3: Neutrogena Hydro Boost Gel Cream
+INSERT INTO dbo.ProductCatalog (name, brandid, categoryid, description, weight, insale, createdate)
+VALUES ('Hydro Boost Gel Cream', @neutro, @moisturizer,
+        'Oil-free gel-cream formula with hyaluronic acid that absorbs quickly to quench dry skin and keep it moisturised for 72 hours. Non-greasy, non-comedogenic.',
+        50.0, 1, SYSUTCDATETIME());
+DECLARE @p3 INT = SCOPE_IDENTITY();
+INSERT INTO dbo.ProductInventory (ProductId, stock) VALUES (@p3, 38);
+INSERT INTO dbo.ProductPricing   (ProductId, price, discountrate, StartUTC) VALUES (@p3, 2750.00, 15.00, SYSUTCDATETIME());
+INSERT INTO dbo.ProductImages    (productid, ImageUrl, IsPrimary, SortOrder) VALUES (@p3, 'https://images.unsplash.com/photo-1629198726018-41b7b7a4b3b2?q=80&w=600', 1, 1);
+
+-- Product 4: CeraVe Foaming Facial Cleanser
+INSERT INTO dbo.ProductCatalog (name, brandid, categoryid, description, weight, insale, createdate)
+VALUES ('Foaming Facial Cleanser', @cerave, @cleanser_cat,
+        'Gentle foaming face wash for normal to oily skin. With ceramides, niacinamide and hyaluronic acid to remove dirt and oil without disrupting the skin barrier.',
+        473.0, 1, SYSUTCDATETIME());
+DECLARE @p4 INT = SCOPE_IDENTITY();
+INSERT INTO dbo.ProductInventory (ProductId, stock) VALUES (@p4, 55);
+INSERT INTO dbo.ProductPricing   (ProductId, price, discountrate, StartUTC) VALUES (@p4, 2100.00, 0.00, SYSUTCDATETIME());
+INSERT INTO dbo.ProductImages    (productid, ImageUrl, IsPrimary, SortOrder) VALUES (@p4, 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?q=80&w=600', 1, 1);
+
+-- Product 5: Neutrogena Ultra Sheer SPF 50+
+INSERT INTO dbo.ProductCatalog (name, brandid, categoryid, description, weight, insale, createdate)
+VALUES ('Ultra Sheer Dry-Touch SPF 50+', @neutro, @suncare_cat,
+        'Lightweight, fast-absorbing sunscreen with Helioplex technology for broad-spectrum UVA/UVB protection. Non-greasy, water-resistant for 80 minutes.',
+        88.0, 1, SYSUTCDATETIME());
+DECLARE @p5 INT = SCOPE_IDENTITY();
+INSERT INTO dbo.ProductInventory (ProductId, stock) VALUES (@p5, 42);
+INSERT INTO dbo.ProductPricing   (ProductId, price, discountrate, StartUTC) VALUES (@p5, 2900.00, 5.00, SYSUTCDATETIME());
+INSERT INTO dbo.ProductImages    (productid, ImageUrl, IsPrimary, SortOrder) VALUES (@p5, 'https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?q=80&w=600', 1, 1);
+
+-- Product 6: Cetaphil Gentle Skin Cleanser
+INSERT INTO dbo.ProductCatalog (name, brandid, categoryid, description, weight, insale, createdate)
+VALUES ('Gentle Skin Cleanser', @cetaphil, @cleanser_cat,
+        'Soap-free, fragrance-free gentle cleanser for all skin types. Removes impurities without stripping the skin of its natural moisture.',
+        500.0, 1, SYSUTCDATETIME());
+DECLARE @p6 INT = SCOPE_IDENTITY();
+INSERT INTO dbo.ProductInventory (ProductId, stock) VALUES (@p6, 70);
+INSERT INTO dbo.ProductPricing   (ProductId, price, discountrate, StartUTC) VALUES (@p6, 1650.00, 0.00, SYSUTCDATETIME());
+INSERT INTO dbo.ProductImages    (productid, ImageUrl, IsPrimary, SortOrder) VALUES (@p6, 'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?q=80&w=600', 1, 1);
+
+-- Product 7: Aveeno Daily Moisturising Lotion
+INSERT INTO dbo.ProductCatalog (name, brandid, categoryid, description, weight, insale, createdate)
+VALUES ('Daily Moisturising Lotion', @aveeno, @body_cat,
+        'Lightweight body lotion with natural colloidal oatmeal and rich emollients that moisturise and soothe dry, sensitive skin 24 hours a day. Fragrance-free.',
+        532.0, 1, SYSUTCDATETIME());
+DECLARE @p7 INT = SCOPE_IDENTITY();
+INSERT INTO dbo.ProductInventory (ProductId, stock) VALUES (@p7, 50);
+INSERT INTO dbo.ProductPricing   (ProductId, price, discountrate, StartUTC) VALUES (@p7, 3500.00, 0.00, SYSUTCDATETIME());
+INSERT INTO dbo.ProductImages    (productid, ImageUrl, IsPrimary, SortOrder) VALUES (@p7, 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?q=80&w=600', 1, 1);
+
+-- Product 8: Vitamin C Brightening Serum (Tenzy)
+INSERT INTO dbo.ProductCatalog (name, brandid, categoryid, description, weight, insale, createdate)
+VALUES ('Vitamin C Brightening Serum', @tenzy, @serum_cat,
+        'Potent 20% Vitamin C serum with ferulic acid and hyaluronic acid to brighten skin, fade dark spots and protect against environmental damage. Paraben-free.',
+        30.0, 1, SYSUTCDATETIME());
+DECLARE @p8 INT = SCOPE_IDENTITY();
+INSERT INTO dbo.ProductInventory (ProductId, stock) VALUES (@p8, 25);
+INSERT INTO dbo.ProductPricing   (ProductId, price, discountrate, StartUTC) VALUES (@p8, 4200.00, 20.00, SYSUTCDATETIME());
+INSERT INTO dbo.ProductImages    (productid, ImageUrl, IsPrimary, SortOrder) VALUES (@p8, 'https://images.unsplash.com/photo-1620916566393-7c3a4a4f3f10?q=80&w=600', 1, 1);
+INSERT INTO dbo.ProductFAQ       (productid, Question, Answer) VALUES (@p8, 'Does this serum oxidise quickly?', 'It contains ferulic acid as a stabiliser. Store in a cool, dark place and use within 3 months of opening.');
+
+GO
+
+PRINT 'Seed data inserted successfully.';
 GO
 
 PRINT 'TenzyShop schema created successfully — all tables and stored procedures ready.';

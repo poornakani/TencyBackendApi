@@ -9,7 +9,7 @@ namespace TencyBackendApi.Controllers
 {
     [Route("api/procurement")]
     [ApiController]
-    [Authorize(Roles = "1")]
+    [Authorize(Roles = "3")]
     public class ProcurementController : ControllerBase
     {
         private readonly IProcurementService _procurementService;

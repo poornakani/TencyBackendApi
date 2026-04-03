@@ -23,17 +23,15 @@ namespace TenzyBackend.Core.Services.ProductsService.BrandService
 
         public Task<int> CreateBrandAsync(BrandModel requestbrandModel)
         {
+            ValidateBrand(requestbrandModel, requireId: false);
             var covertEntity = _objectMapper.Map<BrandModel,BrandEntity>(requestbrandModel);
-
-            ValidateBrandForUpdate(requestbrandModel);
-            var insertBrand = _brandWriter.CreateAsync(covertEntity);
-            return insertBrand;
+            return _brandWriter.CreateAsync(covertEntity);
         }
 
         public async Task<bool> UpdateBrandAsync(BrandModel requestbrandModel)
         {
+            ValidateBrand(requestbrandModel, requireId: true);
             var covertEntity= _objectMapper.Map<BrandModel, BrandEntity>(requestbrandModel);
-            ValidateBrandForUpdate(requestbrandModel);
 
             var existingBrand = await _brandReader.GetByIdAsync(requestbrandModel.BrandId);
             if (existingBrand == null)
@@ -76,7 +74,7 @@ namespace TenzyBackend.Core.Services.ProductsService.BrandService
         }
 
 
-        private static void ValidateBrandForUpdate(BrandModel brandEntity)
+        private static void ValidateBrand(BrandModel brandEntity, bool requireId)
         {
             var errors = new Dictionary<string, string[]>();
 
@@ -86,7 +84,7 @@ namespace TenzyBackend.Core.Services.ProductsService.BrandService
             }
             else
             {
-                if (brandEntity.BrandId <= 0)
+                if (requireId && brandEntity.BrandId <= 0)
                     errors["BrandId"] = new[] { "Valid brand id is required." };
 
                 if (string.IsNullOrWhiteSpace(brandEntity.Name))

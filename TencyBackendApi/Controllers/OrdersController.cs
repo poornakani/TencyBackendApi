@@ -22,7 +22,7 @@ namespace TencyBackendApi.Controllers
 
         // GET /api/orders  — admin, filterable by ?status=pending&page=1&pageSize=20
         [HttpGet]
-        [Authorize(Roles = "1")]
+        [Authorize(Roles = "3")]
         public async Task<IActionResult> GetAll(
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 20,
@@ -34,7 +34,7 @@ namespace TencyBackendApi.Controllers
 
         // GET /api/orders/{id}  — admin
         [HttpGet("{id:int}")]
-        [Authorize(Roles = "1")]
+        [Authorize(Roles = "3")]
         public async Task<IActionResult> GetById(int id)
         {
             var order = await _orderService.GetOrderByIdAsync(id);
@@ -75,7 +75,7 @@ namespace TencyBackendApi.Controllers
 
         // PATCH /api/orders/{id}/status  — admin
         [HttpPatch("{id:int}/status")]
-        [Authorize(Roles = "1")]
+        [Authorize(Roles = "3")]
         public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateOrderStatusRequest request)
         {
             await _orderService.UpdateOrderStatusAsync(id, request.Status);
