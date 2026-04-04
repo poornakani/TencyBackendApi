@@ -58,8 +58,8 @@ namespace TencyBackendApi.Controllers
             return Ok(new ApiResponseModel { result = true, message = "Review submitted.", response = new { id = newId } });
         }
 
-        // PATCH /api/reviews/{id}/moderate — admin approve/reject
-        [HttpPatch("{id:int}/moderate")]
+        // POST /api/reviews/{id}/moderate — admin approve/reject
+        [HttpPost("{id:int}/moderate")]
         [Authorize(Roles = "3")]
         public async Task<IActionResult> Moderate(int id, [FromBody] ModerateReviewRequest request)
         {

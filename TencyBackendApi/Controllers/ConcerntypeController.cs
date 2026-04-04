@@ -47,8 +47,8 @@ namespace TencyBackendApi.Controllers
             return CreatedAtRoute("GetConcernById", new { id = newId }, concernModel);
         }
 
-        // PUT: api/concerns/5
-        [HttpPut("{id:int}")]
+        // POST: api/concerns/5/update
+        [HttpPost("{id:int}/update")]
         public async Task<IActionResult> UpdateConcern(int id, [FromBody] ConcernTypeModel concernModel)
         {
             if (id <= 0 || concernModel == null) return BadRequest();

@@ -75,7 +75,7 @@ namespace TencyBackendApi.Controllers
             });
         }
 
-        [HttpPut]
+        [HttpPost("update")]
         public async Task<IActionResult> UpdateCategory([FromBody] CatagoryModel categoryModel)
         {
             var result = await _categoryService.UpdateCatagoryAsync(categoryModel);

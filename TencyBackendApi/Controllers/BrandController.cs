@@ -64,7 +64,7 @@ namespace TencyBackendApi.Controllers
             });
         }
 
-        [HttpPut]
+        [HttpPost("update")]
         public async Task<IActionResult> UpdateBrand([FromBody] BrandModel brandEntity)
         {
             var result = await _brandService.UpdateBrandAsync(brandEntity);

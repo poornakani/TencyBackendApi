@@ -41,8 +41,8 @@ namespace TencyBackendApi.Controllers
             return Ok(new ApiResponseModel { result = true, message = "Dispatch info saved.", response = new { id } });
         }
 
-        // PATCH /api/dispatch/{orderId}/delivered — mark order delivered
-        [HttpPatch("{orderId:int}/delivered")]
+        // POST /api/dispatch/{orderId}/delivered — mark order delivered
+        [HttpPost("{orderId:int}/delivered")]
         public async Task<IActionResult> MarkDelivered(int orderId)
         {
             await _dispatchService.MarkDeliveredAsync(orderId);

@@ -45,8 +45,8 @@ namespace TencyBackendApi.Controllers
             return CreatedAtRoute("GetPaymentTypeById", new { id = newId }, productFaqModel);
         }
 
-        // PUT: api/productFAQ/5
-        [HttpPut("{id:int}")]
+        // POST: api/productFAQ/5/update
+        [HttpPost("{id:int}/update")]
         public async Task<IActionResult> UpdatepaymentTypes(int id, [FromBody] ProductFAQModel productFaqModel)
         {
             if (id <= 0 || productFaqModel == null) return BadRequest();

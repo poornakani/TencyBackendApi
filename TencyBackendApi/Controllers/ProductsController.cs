@@ -54,8 +54,8 @@ namespace TencyBackendApi.Controllers
                 new ApiResponseModel { result = true, message = "Product created.", response = new { id = newId } });
         }
 
-        // PUT /api/products/{id} — admin only
-        [HttpPut("{id:int}")]
+        // POST /api/products/{id}/update — admin only
+        [HttpPost("{id:int}/update")]
         [Authorize(Roles = "3")]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateProductRequest request)
         {
@@ -64,8 +64,8 @@ namespace TencyBackendApi.Controllers
             return Ok(new ApiResponseModel { result = true, message = "Product updated." });
         }
 
-        // DELETE /api/products/{id} — admin only (soft delete / deactivate)
-        [HttpDelete("{id:int}")]
+        // POST /api/products/{id}/delete — admin only (soft delete / deactivate)
+        [HttpPost("{id:int}/delete")]
         [Authorize(Roles = "3")]
         public async Task<IActionResult> Deactivate(int id)
         {

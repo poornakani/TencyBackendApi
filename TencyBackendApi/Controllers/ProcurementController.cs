@@ -54,8 +54,8 @@ namespace TencyBackendApi.Controllers
                 });
         }
 
-        // PATCH /api/procurement/{id}/status
-        [HttpPatch("{id:int}/status")]
+        // POST /api/procurement/{id}/status
+        [HttpPost("{id:int}/status")]
         public async Task<IActionResult> UpdateStatus(
             int id,
             [FromBody] UpdateProcurementStatusRequest request)

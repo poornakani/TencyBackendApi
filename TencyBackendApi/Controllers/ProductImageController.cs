@@ -35,7 +35,7 @@ namespace TencyBackendApi.Controllers
             });
         }
 
-        [HttpPut]
+        [HttpPost("update")]
         public async Task<IActionResult> UpdateProductImage([FromBody] ProductImageModel productImageModel)
         {
             if (productImageModel == null)
@@ -53,7 +53,7 @@ namespace TencyBackendApi.Controllers
             });
         }
 
-        [HttpPut("deactive/{productImageId:int}")]
+        [HttpPost("deactive/{productImageId:int}")]
         public async Task<IActionResult> DeactiveProductImage([FromRoute] int productImageId)
         {
             var result = await _productImageService.DeactiveProductImageAsync(productImageId);
@@ -68,7 +68,7 @@ namespace TencyBackendApi.Controllers
             });
         }
 
-        [HttpPut("active/{productImageId:int}")]
+        [HttpPost("active/{productImageId:int}")]
         public async Task<IActionResult> ActiveProductImage([FromRoute] int productImageId)
         {
             var result = await _productImageService.ActiveProductImageAsync(productImageId);

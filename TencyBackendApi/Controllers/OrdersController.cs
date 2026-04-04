@@ -73,8 +73,8 @@ namespace TencyBackendApi.Controllers
                 new ApiResponseModel { result = true, message = "Order placed successfully.", response = new { id = newId } });
         }
 
-        // PATCH /api/orders/{id}/status  — admin
-        [HttpPatch("{id:int}/status")]
+        // POST /api/orders/{id}/status  — admin
+        [HttpPost("{id:int}/status")]
         [Authorize(Roles = "3")]
         public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateOrderStatusRequest request)
         {
