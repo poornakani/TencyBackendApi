@@ -31,6 +31,8 @@ namespace TenzyBackend.Data.Products.ProductCatalog
             p.Add("@SellingPrice",   request.SellingPrice,  DbType.Decimal);
             p.Add("@OriginalPrice",  request.OriginalPrice, DbType.Decimal);
             p.Add("@StockQuantity",  request.StockQuantity, DbType.Int32);
+            p.Add("@StartUTC",       request.StartUTC,      DbType.DateTime2);
+            p.Add("@EndUTC",         request.EndUTC,        DbType.DateTime2);
             p.Add("@ConcernTypeIds", concernCsv,            DbType.String);
 
             return await _dapper.InsertAsync<int>(
@@ -56,6 +58,8 @@ namespace TenzyBackend.Data.Products.ProductCatalog
             p.Add("@SellingPrice",   request.SellingPrice,  DbType.Decimal);
             p.Add("@OriginalPrice",  request.OriginalPrice, DbType.Decimal);
             p.Add("@StockQuantity",  request.StockQuantity, DbType.Int32);
+            p.Add("@StartUTC",       request.StartUTC,      DbType.DateTime2);
+            p.Add("@EndUTC",         request.EndUTC,        DbType.DateTime2);
             p.Add("@ConcernTypeIds", concernCsv,            DbType.String);
 
             await _dapper.ExecuteAsync(

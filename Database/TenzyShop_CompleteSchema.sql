@@ -1009,9 +1009,12 @@ BEGIN
     LEFT JOIN dbo.Brand          b   ON b.Brandid      = p.brandid    AND b.Isactive  = 1
     LEFT JOIN dbo.Category       c   ON c.catagoryID   = p.categoryid AND c.IsActive  = 1
     LEFT JOIN dbo.ProductInventory inv ON inv.ProductId = p.productid
-    LEFT JOIN dbo.ProductPricing   pr  ON pr.ProductId = p.productid
-        AND pr.StartUTC <= SYSUTCDATETIME()
-        AND (pr.EndUTC IS NULL OR pr.EndUTC >= SYSUTCDATETIME())
+    OUTER APPLY (
+        SELECT TOP 1 price, discountrate, StartUTC, EndUTC
+        FROM dbo.ProductPricing pr1
+        WHERE pr1.ProductId = p.productid
+        ORDER BY ISNULL(pr1.lastupdated, pr1.createdate) DESC, pr1.PricingId DESC
+    ) pr
     ORDER BY p.createdate DESC;
 END
 GO
@@ -1051,9 +1054,12 @@ BEGIN
     LEFT JOIN dbo.Brand          b   ON b.Brandid      = p.brandid    AND b.Isactive  = 1
     LEFT JOIN dbo.Category       c   ON c.catagoryID   = p.categoryid AND c.IsActive  = 1
     LEFT JOIN dbo.ProductInventory inv ON inv.ProductId = p.productid
-    LEFT JOIN dbo.ProductPricing   pr  ON pr.ProductId = p.productid
-        AND pr.StartUTC <= SYSUTCDATETIME()
-        AND (pr.EndUTC IS NULL OR pr.EndUTC >= SYSUTCDATETIME())
+    OUTER APPLY (
+        SELECT TOP 1 price, discountrate, StartUTC, EndUTC
+        FROM dbo.ProductPricing pr1
+        WHERE pr1.ProductId = p.productid
+        ORDER BY ISNULL(pr1.lastupdated, pr1.createdate) DESC, pr1.PricingId DESC
+    ) pr
     WHERE  p.productid = @ProductId;
 
     -- Result set 2: images
@@ -1091,6 +1097,8 @@ CREATE PROCEDURE dbo.spProductCatalog_Insert
     @SellingPrice   DECIMAL(18,2)  = 0,
     @OriginalPrice  DECIMAL(18,2)  = 0,
     @StockQuantity  INT            = 0,
+    @StartUTC       DATETIME2      = NULL,
+    @EndUTC         DATETIME2      = NULL,
     @ConcernTypeIds NVARCHAR(MAX)  = NULL   -- comma-separated list e.g. '1,2,3'
 AS
 BEGIN
@@ -1108,8 +1116,8 @@ BEGIN
     INSERT INTO dbo.ProductInventory (ProductId, stock, LastStockUpdateUTC)
     VALUES (@ProductId, @StockQuantity, SYSUTCDATETIME());
 
-    INSERT INTO dbo.ProductPricing (ProductId, price, discountrate, StartUTC, createdate, lastupdated)
-    VALUES (@ProductId, @SellingPrice, @DiscountRate, SYSUTCDATETIME(), SYSUTCDATETIME(), SYSUTCDATETIME());
+    INSERT INTO dbo.ProductPricing (ProductId, price, discountrate, StartUTC, EndUTC, createdate, lastupdated)
+    VALUES (@ProductId, @SellingPrice, @DiscountRate, ISNULL(@StartUTC, SYSUTCDATETIME()), @EndUTC, SYSUTCDATETIME(), SYSUTCDATETIME());
 
     -- Insert concern types (ignores invalid IDs)
     IF @ConcernTypeIds IS NOT NULL AND LEN(TRIM(@ConcernTypeIds)) > 0
@@ -1139,6 +1147,8 @@ CREATE PROCEDURE dbo.spProductCatalog_Update
     @SellingPrice   DECIMAL(18,2)  = 0,
     @OriginalPrice  DECIMAL(18,2)  = 0,
     @StockQuantity  INT            = NULL,
+    @StartUTC       DATETIME2      = NULL,
+    @EndUTC         DATETIME2      = NULL,
     @ConcernTypeIds NVARCHAR(MAX)  = NULL   -- comma-separated; NULL = leave unchanged
 AS
 BEGIN
@@ -1166,10 +1176,15 @@ BEGIN
     UPDATE dbo.ProductPricing
     SET    price        = @SellingPrice,
            discountrate = @DiscountRate,
+           StartUTC     = ISNULL(@StartUTC, StartUTC),
+           EndUTC       = @EndUTC,
            lastupdated  = SYSUTCDATETIME()
-    WHERE  ProductId = @ProductId
-      AND  StartUTC <= SYSUTCDATETIME()
-      AND  (EndUTC IS NULL OR EndUTC >= SYSUTCDATETIME());
+    WHERE  PricingId = (
+        SELECT TOP 1 PricingId
+        FROM dbo.ProductPricing
+        WHERE ProductId = @ProductId
+        ORDER BY ISNULL(lastupdated, createdate) DESC, PricingId DESC
+    );
 
     -- Replace concern associations when a list is supplied
     IF @ConcernTypeIds IS NOT NULL
