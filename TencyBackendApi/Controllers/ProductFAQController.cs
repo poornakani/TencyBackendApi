@@ -42,7 +42,8 @@ namespace TencyBackendApi.Controllers
             if (productFaqModel == null) return BadRequest();
             var newId = await _productFAQService.CreateProductFAQAsync(productFaqModel);
             if (newId <= 0) return BadRequest();
-            return CreatedAtRoute("GetPaymentTypeById", new { id = newId }, productFaqModel);
+            productFaqModel.FAQId = newId;
+            return CreatedAtRoute("GetproductFAQById", new { id = newId }, productFaqModel);
         }
 
         // POST: api/productFAQ/5/update
