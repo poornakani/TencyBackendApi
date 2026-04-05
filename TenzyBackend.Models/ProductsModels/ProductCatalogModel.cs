@@ -28,6 +28,7 @@ namespace TenzyBackend.Models.ProductsModels
 
         // Primary image (from ProductImages)
         public string? PrimaryImageUrl { get; set; }
+        public string? ConcernTypeIdsCsv { get; set; }
 
         // Populated on single-product fetch (GetById)
         public List<int>? ConcernTypeIds { get; set; }

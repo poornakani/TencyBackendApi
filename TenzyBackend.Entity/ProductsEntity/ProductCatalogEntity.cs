@@ -55,5 +55,6 @@ namespace TenzyBackend.Entity.ProductsEntity
         public DateTime? StartUTC { get; set; }
         public DateTime? EndUTC { get; set; }
         public string? PrimaryImageUrl { get; set; }
+        public string? ConcernTypeIdsCsv { get; set; }
     }
 }

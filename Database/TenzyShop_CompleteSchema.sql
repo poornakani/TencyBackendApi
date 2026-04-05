@@ -962,7 +962,11 @@ BEGIN
         (SELECT TOP 1 ImageUrl
          FROM dbo.ProductImages pi2
          WHERE pi2.productid = p.productid AND pi2.IsPrimary = 1 AND pi2.IsActive = 1
-        )                             AS PrimaryImageUrl
+        )                             AS PrimaryImageUrl,
+        (SELECT STRING_AGG(CAST(pc.concernID AS NVARCHAR(20)), ',')
+         FROM dbo.ProductConcerns pc
+         WHERE pc.productid = p.productid
+        )                             AS ConcernTypeIdsCsv
     FROM dbo.ProductCatalog p
     LEFT JOIN dbo.Brand          b   ON b.Brandid      = p.brandid    AND b.Isactive  = 1
     LEFT JOIN dbo.Category       c   ON c.catagoryID   = p.categoryid AND c.IsActive  = 1
@@ -1004,7 +1008,11 @@ BEGIN
         (SELECT TOP 1 ImageUrl
          FROM dbo.ProductImages pi2
          WHERE pi2.productid = p.productid AND pi2.IsPrimary = 1 AND pi2.IsActive = 1
-        )                             AS PrimaryImageUrl
+        )                             AS PrimaryImageUrl,
+        (SELECT STRING_AGG(CAST(pc.concernID AS NVARCHAR(20)), ',')
+         FROM dbo.ProductConcerns pc
+         WHERE pc.productid = p.productid
+        )                             AS ConcernTypeIdsCsv
     FROM dbo.ProductCatalog p
     LEFT JOIN dbo.Brand          b   ON b.Brandid      = p.brandid    AND b.Isactive  = 1
     LEFT JOIN dbo.Category       c   ON c.catagoryID   = p.categoryid AND c.IsActive  = 1
@@ -1049,7 +1057,11 @@ BEGIN
         (SELECT TOP 1 ImageUrl
          FROM dbo.ProductImages pi2
          WHERE pi2.productid = p.productid AND pi2.IsPrimary = 1 AND pi2.IsActive = 1
-        )                             AS PrimaryImageUrl
+        )                             AS PrimaryImageUrl,
+        (SELECT STRING_AGG(CAST(pc.concernID AS NVARCHAR(20)), ',')
+         FROM dbo.ProductConcerns pc
+         WHERE pc.productid = p.productid
+        )                             AS ConcernTypeIdsCsv
     FROM dbo.ProductCatalog p
     LEFT JOIN dbo.Brand          b   ON b.Brandid      = p.brandid    AND b.Isactive  = 1
     LEFT JOIN dbo.Category       c   ON c.catagoryID   = p.categoryid AND c.IsActive  = 1
