@@ -72,5 +72,23 @@ namespace TencyBackendApi.Controllers
             await _productService.DeactivateProductAsync(id);
             return Ok(new ApiResponseModel { result = true, message = "Product deactivated." });
         }
+
+        // GET /api/products/{id}/concerns — admin only
+        [HttpGet("{id:int}/concerns")]
+        [Authorize(Roles = "3")]
+        public async Task<IActionResult> GetConcerns(int id)
+        {
+            var concernIds = await _productService.GetProductConcernIdsAsync(id);
+            return Ok(new ApiResponseModel { result = true, response = concernIds });
+        }
+
+        // GET /api/products/{id}/payment-options — admin only
+        [HttpGet("{id:int}/payment-options")]
+        [Authorize(Roles = "3")]
+        public async Task<IActionResult> GetPaymentOptions(int id)
+        {
+            var options = await _productService.GetProductPaymentOptionsAsync(id);
+            return Ok(new ApiResponseModel { result = true, response = options });
+        }
     }
 }

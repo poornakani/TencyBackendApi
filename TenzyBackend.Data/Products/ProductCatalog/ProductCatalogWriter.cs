@@ -41,6 +41,7 @@ namespace TenzyBackend.Data.Products.ProductCatalog
             var newId = await _dapper.InsertAsync<int>(
                 "spProductCatalog_Insert", p, CommandType.StoredProcedure);
             await SyncProductConcernsAsync(newId, concernIds, replaceExisting: true);
+            await SyncProductPaymentOptionsAsync(newId, request.PaymentOptions);
             return newId;
         }
 
@@ -71,6 +72,7 @@ namespace TenzyBackend.Data.Products.ProductCatalog
             await _dapper.ExecuteAsync(
                 "spProductCatalog_Update", p, CommandType.StoredProcedure);
             await SyncProductConcernsAsync(request.ProductId, concernIds, replaceExisting: request.ConcernTypeIds != null);
+            await SyncProductPaymentOptionsAsync(request.ProductId, request.PaymentOptions);
             return true;
         }
 
@@ -125,6 +127,34 @@ BEGIN
     INSERT INTO dbo.ProductConcerns (productid, concernID)
     VALUES (@ProductId, @ConcernId);
 END", insertParams, CommandType.Text);
+            }
+        }
+
+        private async Task SyncProductPaymentOptionsAsync(int productId, List<ProductPaymentOptionRequest>? paymentOptions)
+        {
+            if (paymentOptions == null) return;
+
+            // Delete all existing payment options for this product
+            var delParams = new DynamicParameters();
+            delParams.Add("@ProductId", productId, DbType.Int32);
+            await _dapper.ExecuteAsync(
+                "DELETE FROM dbo.ProductPaymentOptions WHERE productid = @ProductId",
+                delParams, CommandType.Text);
+
+            // Insert the new set (deduplicated by PaymentTypeId)
+            var seen = new System.Collections.Generic.HashSet<int>();
+            foreach (var opt in paymentOptions.Where(o => o.PaymentTypeId > 0))
+            {
+                if (!seen.Add(opt.PaymentTypeId)) continue;
+                var ins = new DynamicParameters();
+                ins.Add("@ProductId",     productId,        DbType.Int32);
+                ins.Add("@PaymentTypeId", opt.PaymentTypeId, DbType.Int32);
+                ins.Add("@Instalment",    opt.Instalment,   DbType.Int32);
+                await _dapper.ExecuteAsync(
+                    @"IF EXISTS (SELECT 1 FROM dbo.PaymentType WHERE PaymentTypeId = @PaymentTypeId AND IsActive = 1)
+                      INSERT INTO dbo.ProductPaymentOptions (productid, PaymentTypeId, instalment)
+                      VALUES (@ProductId, @PaymentTypeId, @Instalment);",
+                    ins, CommandType.Text);
             }
         }
 

@@ -84,5 +84,19 @@ namespace TenzyBackend.Core.Services.ProductsService.ProductCatalogService
 
             return await _writer.DeactivateAsync(productId);
         }
+
+        public async Task<List<int>> GetProductConcernIdsAsync(int productId)
+        {
+            if (productId <= 0)
+                throw new ValidationException("Invalid product id.");
+            return await _reader.GetProductConcernIdsAsync(productId);
+        }
+
+        public async Task<List<ProductPaymentOptionModel>> GetProductPaymentOptionsAsync(int productId)
+        {
+            if (productId <= 0)
+                throw new ValidationException("Invalid product id.");
+            return await _reader.GetProductPaymentOptionsAsync(productId);
+        }
     }
 }

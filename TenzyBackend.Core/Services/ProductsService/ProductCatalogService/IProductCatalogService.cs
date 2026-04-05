@@ -12,5 +12,7 @@ namespace TenzyBackend.Core.Services.ProductsService.ProductCatalogService
         Task<int> CreateProductAsync(CreateProductRequest request);
         Task<bool> UpdateProductAsync(UpdateProductRequest request);
         Task<bool> DeactivateProductAsync(int productId);
+        Task<List<int>> GetProductConcernIdsAsync(int productId);
+        Task<List<ProductPaymentOptionModel>> GetProductPaymentOptionsAsync(int productId);
     }
 }

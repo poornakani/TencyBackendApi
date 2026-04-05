@@ -28,6 +28,10 @@ namespace TenzyBackend.Models.ProductsModels
 
         // Primary image (from ProductImages)
         public string? PrimaryImageUrl { get; set; }
+
+        // Populated on single-product fetch (GetById)
+        public List<int>? ConcernTypeIds { get; set; }
+        public List<ProductPaymentOptionModel>? PaymentOptions { get; set; }
     }
 
     public class CreateProductRequest
@@ -44,6 +48,7 @@ namespace TenzyBackend.Models.ProductsModels
         public DateTime? StartUTC { get; set; }
         public DateTime? EndUTC { get; set; }
         public List<int>? ConcernTypeIds { get; set; }
+        public List<ProductPaymentOptionRequest>? PaymentOptions { get; set; }
     }
 
     public class UpdateProductRequest
@@ -61,10 +66,23 @@ namespace TenzyBackend.Models.ProductsModels
         public DateTime? StartUTC { get; set; }
         public DateTime? EndUTC { get; set; }
         public List<int>? ConcernTypeIds { get; set; }
+        public List<ProductPaymentOptionRequest>? PaymentOptions { get; set; }
     }
 
     public class UpdateProductConcernsRequest
     {
         public List<int>? ConcernTypeIds { get; set; }
+    }
+
+    public class ProductPaymentOptionRequest
+    {
+        public int PaymentTypeId { get; set; }
+        public int? Instalment { get; set; }
+    }
+
+    public class ProductPaymentOptionModel
+    {
+        public int PaymentTypeId { get; set; }
+        public int? Instalment { get; set; }
     }
 }

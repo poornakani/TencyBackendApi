@@ -44,6 +44,7 @@ namespace TenzyBackend.Data.Products.PaymentType
         protected override DynamicParameters BuildUpdateParameters(PaymentTypeEntity entity)
         {
             var dynamicParameters = new DynamicParameters();
+            dynamicParameters.Add("@PaymentTypeId", entity.PaymentTypeId);
             dynamicParameters.Add("@PaymentType", entity.Name);
             return dynamicParameters;
         }
