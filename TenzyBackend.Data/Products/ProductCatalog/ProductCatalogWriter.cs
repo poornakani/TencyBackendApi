@@ -134,16 +134,18 @@ END", insertParams, CommandType.Text);
         {
             if (paymentOptions == null) return;
 
-            // Delete all existing payment options for this product
             var delParams = new DynamicParameters();
             delParams.Add("@ProductId", productId, DbType.Int32);
             await _dapper.ExecuteAsync(
-                "DELETE FROM dbo.ProductPaymentOptions WHERE productid = @ProductId",
+                @"IF OBJECT_ID('dbo.ProductPaymentOptions', 'U') IS NULL
+                      RETURN;
+
+                  DELETE FROM dbo.ProductPaymentOptions
+                  WHERE productid = @ProductId",
                 delParams, CommandType.Text);
 
-            // Insert the new set (deduplicated by PaymentTypeId)
             var seen = new System.Collections.Generic.HashSet<int>();
-            foreach (var opt in paymentOptions.Where(o => o.PaymentTypeId > 0))
+            foreach (var opt in paymentOptions.Where(o => o != null && o.PaymentTypeId > 0))
             {
                 if (!seen.Add(opt.PaymentTypeId)) continue;
                 var ins = new DynamicParameters();
@@ -151,7 +153,10 @@ END", insertParams, CommandType.Text);
                 ins.Add("@PaymentTypeId", opt.PaymentTypeId, DbType.Int32);
                 ins.Add("@Instalment",    opt.Instalment,   DbType.Int32);
                 await _dapper.ExecuteAsync(
-                    @"IF EXISTS (SELECT 1 FROM dbo.PaymentType WHERE PaymentTypeId = @PaymentTypeId AND IsActive = 1)
+                    @"IF OBJECT_ID('dbo.ProductPaymentOptions', 'U') IS NULL
+                          RETURN;
+
+                      IF EXISTS (SELECT 1 FROM dbo.PaymentType WHERE PaymentTypeId = @PaymentTypeId AND IsActive = 1)
                       INSERT INTO dbo.ProductPaymentOptions (productid, PaymentTypeId, instalment)
                       VALUES (@ProductId, @PaymentTypeId, @Instalment);",
                     ins, CommandType.Text);

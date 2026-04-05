@@ -34,7 +34,10 @@ namespace TenzyBackend.Data.Products.ProductCatalog
             var p = new DynamicParameters();
             p.Add("@ProductId", productId);
             var rows = await _dapperPro.GetAllAsync<int>(
-                @"SELECT concernID FROM dbo.ProductConcerns WHERE productid = @ProductId",
+                @"IF OBJECT_ID('dbo.ProductConcerns', 'U') IS NULL
+                      SELECT CAST(NULL AS INT) WHERE 1 = 0;
+                  ELSE
+                      SELECT concernID FROM dbo.ProductConcerns WHERE productid = @ProductId",
                 p, CommandType.Text);
             return rows;
         }
@@ -44,9 +47,12 @@ namespace TenzyBackend.Data.Products.ProductCatalog
             var p = new DynamicParameters();
             p.Add("@ProductId", productId);
             var rows = await _dapperPro.GetAllAsync<ProductPaymentOptionModel>(
-                @"SELECT PaymentTypeId, instalment AS Instalment
-                  FROM dbo.ProductPaymentOptions
-                  WHERE productid = @ProductId",
+                @"IF OBJECT_ID('dbo.ProductPaymentOptions', 'U') IS NULL
+                      SELECT CAST(NULL AS INT) AS PaymentTypeId, CAST(NULL AS INT) AS Instalment WHERE 1 = 0;
+                  ELSE
+                      SELECT PaymentTypeId, instalment AS Instalment
+                      FROM dbo.ProductPaymentOptions
+                      WHERE productid = @ProductId",
                 p, CommandType.Text);
             return rows;
         }
