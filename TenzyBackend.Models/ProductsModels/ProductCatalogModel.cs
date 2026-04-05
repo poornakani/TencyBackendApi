@@ -62,4 +62,9 @@ namespace TenzyBackend.Models.ProductsModels
         public DateTime? EndUTC { get; set; }
         public List<int>? ConcernTypeIds { get; set; }
     }
+
+    public class UpdateProductConcernsRequest
+    {
+        public List<int>? ConcernTypeIds { get; set; }
+    }
 }

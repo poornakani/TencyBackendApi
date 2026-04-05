@@ -60,7 +60,7 @@ CREATE PROCEDURE dbo.sp_ConcernType_GetAll
 AS
 BEGIN
     SET NOCOUNT ON;
-    SELECT ConcernTypeId, ConcernType, description, IsActive
+    SELECT ConcernTypeId, ConcernType AS Name, description AS Description, IsActive
     FROM   dbo.ConcernTypes
     WHERE  IsActive = 1
     ORDER BY ConcernType;
@@ -72,7 +72,7 @@ CREATE PROCEDURE dbo.sp_ConcernType_GetById
 AS
 BEGIN
     SET NOCOUNT ON;
-    SELECT ConcernTypeId, ConcernType, description, IsActive
+    SELECT ConcernTypeId, ConcernType AS Name, description AS Description, IsActive
     FROM   dbo.ConcernTypes
     WHERE  ConcernTypeId = @ConcernTypeId;
 END
@@ -228,12 +228,13 @@ BEGIN
     IF @ConcernTypeIds IS NOT NULL AND LEN(TRIM(@ConcernTypeIds)) > 0
     BEGIN
         INSERT INTO dbo.ProductConcerns (productid, concernID)
-        SELECT @ProductId, CAST(value AS INT)
+        SELECT @ProductId, TRY_CAST(TRIM(value) AS INT)
         FROM   STRING_SPLIT(@ConcernTypeIds, ',')
         WHERE  TRIM(value) <> ''
+          AND  TRY_CAST(TRIM(value) AS INT) IS NOT NULL
           AND  EXISTS (
               SELECT 1 FROM dbo.ConcernTypes ct
-              WHERE  ct.ConcernTypeId = CAST(value AS INT)
+              WHERE  ct.ConcernTypeId = TRY_CAST(TRIM(value) AS INT)
           );
     END
 
@@ -296,12 +297,13 @@ BEGIN
         IF LEN(TRIM(@ConcernTypeIds)) > 0
         BEGIN
             INSERT INTO dbo.ProductConcerns (productid, concernID)
-            SELECT @ProductId, CAST(value AS INT)
+            SELECT @ProductId, TRY_CAST(TRIM(value) AS INT)
             FROM   STRING_SPLIT(@ConcernTypeIds, ',')
             WHERE  TRIM(value) <> ''
+              AND  TRY_CAST(TRIM(value) AS INT) IS NOT NULL
               AND  EXISTS (
                   SELECT 1 FROM dbo.ConcernTypes ct
-                  WHERE  ct.ConcernTypeId = CAST(value AS INT)
+                  WHERE  ct.ConcernTypeId = TRY_CAST(TRIM(value) AS INT)
               );
         END
     END

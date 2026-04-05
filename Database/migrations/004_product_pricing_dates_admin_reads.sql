@@ -151,13 +151,14 @@ BEGIN
     IF @ConcernTypeIds IS NOT NULL AND LEN(TRIM(@ConcernTypeIds)) > 0
     BEGIN
         INSERT INTO dbo.ProductConcerns (productid, concernID)
-        SELECT @ProductId, CAST(value AS INT)
+        SELECT @ProductId, TRY_CAST(TRIM(value) AS INT)
         FROM STRING_SPLIT(@ConcernTypeIds, ',')
         WHERE TRIM(value) <> ''
+          AND TRY_CAST(TRIM(value) AS INT) IS NOT NULL
           AND EXISTS (
               SELECT 1
               FROM dbo.ConcernTypes ct
-              WHERE ct.ConcernTypeId = CAST(value AS INT)
+              WHERE ct.ConcernTypeId = TRY_CAST(TRIM(value) AS INT)
           );
     END
 
@@ -222,13 +223,14 @@ BEGIN
         IF LEN(TRIM(@ConcernTypeIds)) > 0
         BEGIN
             INSERT INTO dbo.ProductConcerns (productid, concernID)
-            SELECT @ProductId, CAST(value AS INT)
+            SELECT @ProductId, TRY_CAST(TRIM(value) AS INT)
             FROM STRING_SPLIT(@ConcernTypeIds, ',')
             WHERE TRIM(value) <> ''
+              AND TRY_CAST(TRIM(value) AS INT) IS NOT NULL
               AND EXISTS (
                   SELECT 1
                   FROM dbo.ConcernTypes ct
-                  WHERE ct.ConcernTypeId = CAST(value AS INT)
+                  WHERE ct.ConcernTypeId = TRY_CAST(TRIM(value) AS INT)
               );
         END
     END

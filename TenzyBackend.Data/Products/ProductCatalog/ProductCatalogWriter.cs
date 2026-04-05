@@ -35,8 +35,10 @@ namespace TenzyBackend.Data.Products.ProductCatalog
             p.Add("@EndUTC",         request.EndUTC,        DbType.DateTime2);
             p.Add("@ConcernTypeIds", concernCsv,            DbType.String);
 
-            return await _dapper.InsertAsync<int>(
+            var newId = await _dapper.InsertAsync<int>(
                 "spProductCatalog_Insert", p, CommandType.StoredProcedure);
+            await SyncProductConcernsAsync(newId, concernCsv, replaceExisting: true);
+            return newId;
         }
 
         public async Task<bool> UpdateAsync(UpdateProductRequest request)
@@ -64,6 +66,7 @@ namespace TenzyBackend.Data.Products.ProductCatalog
 
             await _dapper.ExecuteAsync(
                 "spProductCatalog_Update", p, CommandType.StoredProcedure);
+            await SyncProductConcernsAsync(request.ProductId, concernCsv, replaceExisting: request.ConcernTypeIds != null);
             return true;
         }
 
@@ -75,6 +78,45 @@ namespace TenzyBackend.Data.Products.ProductCatalog
             int rows = await _dapper.ExecuteAsync(
                 "spProductCatalog_Deactivate", p, CommandType.StoredProcedure);
             return rows > 0;
+        }
+
+        private async Task SyncProductConcernsAsync(int productId, string? concernCsv, bool replaceExisting)
+        {
+            if (!replaceExisting) return;
+
+            var p = new DynamicParameters();
+            p.Add("@ProductId", productId, DbType.Int32);
+            p.Add("@ConcernTypeIds", concernCsv, DbType.String);
+
+            const string sql = @"
+IF OBJECT_ID('dbo.ProductConcerns', 'U') IS NULL
+    RETURN;
+
+DELETE FROM dbo.ProductConcerns
+WHERE productid = @ProductId;
+
+IF @ConcernTypeIds IS NULL OR LTRIM(RTRIM(@ConcernTypeIds)) = ''
+    RETURN;
+
+;WITH ParsedConcernIds AS (
+    SELECT DISTINCT TRY_CAST(LTRIM(RTRIM(value)) AS INT) AS ConcernTypeId
+    FROM STRING_SPLIT(@ConcernTypeIds, ',')
+)
+INSERT INTO dbo.ProductConcerns (productid, concernID)
+SELECT @ProductId, ids.ConcernTypeId
+FROM ParsedConcernIds ids
+WHERE ids.ConcernTypeId IS NOT NULL
+  AND (
+        (OBJECT_ID('dbo.ConcernTypes', 'U') IS NOT NULL AND EXISTS (
+            SELECT 1 FROM dbo.ConcernTypes ct WHERE ct.ConcernTypeId = ids.ConcernTypeId
+        ))
+        OR
+        (OBJECT_ID('dbo.ConcernType', 'U') IS NOT NULL AND EXISTS (
+            SELECT 1 FROM dbo.ConcernType ct WHERE ct.ConcernTypeId = ids.ConcernTypeId
+        ))
+      );";
+
+            await _dapper.ExecuteAsync(sql, p, CommandType.Text);
         }
     }
 }
