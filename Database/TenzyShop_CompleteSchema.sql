@@ -1275,6 +1275,8 @@ BEGIN
     SET    productid = @ProductId, ImageUrl = @ImageUrl,
            IsPrimary = @IsPrimary, SortOrder = @SortOrder, IsActive = @IsActive
     WHERE  ImageId = @ImageId;
+
+    SELECT @@ROWCOUNT AS RowsAffected;
 END
 GO
 
@@ -1284,6 +1286,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
     UPDATE dbo.ProductImages SET IsActive = 0 WHERE ImageId = @ImageId;
+    SELECT @@ROWCOUNT AS RowsAffected;
 END
 GO
 
@@ -1293,6 +1296,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
     UPDATE dbo.ProductImages SET IsActive = 1 WHERE ImageId = @ImageId;
+    SELECT @@ROWCOUNT AS RowsAffected;
 END
 GO
 
