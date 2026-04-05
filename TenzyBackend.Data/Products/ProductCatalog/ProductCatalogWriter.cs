@@ -1,5 +1,7 @@
 using Dapper;
+using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Threading.Tasks;
 using TenzyBackend.DBContext;
 using TenzyBackend.Models.ProductsModels;
@@ -17,8 +19,9 @@ namespace TenzyBackend.Data.Products.ProductCatalog
 
         public async Task<int> CreateAsync(CreateProductRequest request)
         {
-            var concernCsv = request.ConcernTypeIds != null && request.ConcernTypeIds.Count > 0
-                ? string.Join(",", request.ConcernTypeIds)
+            var concernIds = NormalizeConcernIds(request.ConcernTypeIds);
+            var concernCsv = concernIds.Count > 0
+                ? string.Join(",", concernIds)
                 : null;
 
             var p = new DynamicParameters();
@@ -37,7 +40,7 @@ namespace TenzyBackend.Data.Products.ProductCatalog
 
             var newId = await _dapper.InsertAsync<int>(
                 "spProductCatalog_Insert", p, CommandType.StoredProcedure);
-            await SyncProductConcernsAsync(newId, concernCsv, replaceExisting: true);
+            await SyncProductConcernsAsync(newId, concernIds, replaceExisting: true);
             return newId;
         }
 
@@ -45,9 +48,10 @@ namespace TenzyBackend.Data.Products.ProductCatalog
         {
             // Pass NULL when no concern list supplied so the SP leaves concerns unchanged.
             // Pass empty string when the list is explicitly empty (clears all concerns).
-            string? concernCsv = null;
-            if (request.ConcernTypeIds != null)
-                concernCsv = string.Join(",", request.ConcernTypeIds);
+            var concernIds = NormalizeConcernIds(request.ConcernTypeIds);
+            string? concernCsv = request.ConcernTypeIds != null
+                ? string.Join(",", concernIds)
+                : null;
 
             var p = new DynamicParameters();
             p.Add("@ProductId",      request.ProductId,     DbType.Int32);
@@ -66,7 +70,7 @@ namespace TenzyBackend.Data.Products.ProductCatalog
 
             await _dapper.ExecuteAsync(
                 "spProductCatalog_Update", p, CommandType.StoredProcedure);
-            await SyncProductConcernsAsync(request.ProductId, concernCsv, replaceExisting: request.ConcernTypeIds != null);
+            await SyncProductConcernsAsync(request.ProductId, concernIds, replaceExisting: request.ConcernTypeIds != null);
             return true;
         }
 
@@ -80,43 +84,56 @@ namespace TenzyBackend.Data.Products.ProductCatalog
             return rows > 0;
         }
 
-        private async Task SyncProductConcernsAsync(int productId, string? concernCsv, bool replaceExisting)
+        private async Task SyncProductConcernsAsync(int productId, IReadOnlyList<int> concernIds, bool replaceExisting)
         {
             if (!replaceExisting) return;
 
             var p = new DynamicParameters();
             p.Add("@ProductId", productId, DbType.Int32);
-            p.Add("@ConcernTypeIds", concernCsv, DbType.String);
-
-            const string sql = @"
+            await _dapper.ExecuteAsync(@"
 IF OBJECT_ID('dbo.ProductConcerns', 'U') IS NULL
     RETURN;
 
 DELETE FROM dbo.ProductConcerns
-WHERE productid = @ProductId;
+WHERE productid = @ProductId;", p, CommandType.Text);
 
-IF @ConcernTypeIds IS NULL OR LTRIM(RTRIM(@ConcernTypeIds)) = ''
+            foreach (var concernId in concernIds)
+            {
+                var insertParams = new DynamicParameters();
+                insertParams.Add("@ProductId", productId, DbType.Int32);
+                insertParams.Add("@ConcernId", concernId, DbType.Int32);
+
+                await _dapper.ExecuteAsync(@"
+IF OBJECT_ID('dbo.ProductConcerns', 'U') IS NULL
     RETURN;
 
-;WITH ParsedConcernIds AS (
-    SELECT DISTINCT TRY_CAST(LTRIM(RTRIM(value)) AS INT) AS ConcernTypeId
-    FROM STRING_SPLIT(@ConcernTypeIds, ',')
+IF (
+    (OBJECT_ID('dbo.ConcernTypes', 'U') IS NOT NULL AND EXISTS (
+        SELECT 1 FROM dbo.ConcernTypes WHERE ConcernTypeId = @ConcernId
+    ))
+    OR
+    (OBJECT_ID('dbo.ConcernType', 'U') IS NOT NULL AND EXISTS (
+        SELECT 1 FROM dbo.ConcernType WHERE ConcernTypeId = @ConcernId
+    ))
 )
-INSERT INTO dbo.ProductConcerns (productid, concernID)
-SELECT @ProductId, ids.ConcernTypeId
-FROM ParsedConcernIds ids
-WHERE ids.ConcernTypeId IS NOT NULL
-  AND (
-        (OBJECT_ID('dbo.ConcernTypes', 'U') IS NOT NULL AND EXISTS (
-            SELECT 1 FROM dbo.ConcernTypes ct WHERE ct.ConcernTypeId = ids.ConcernTypeId
-        ))
-        OR
-        (OBJECT_ID('dbo.ConcernType', 'U') IS NOT NULL AND EXISTS (
-            SELECT 1 FROM dbo.ConcernType ct WHERE ct.ConcernTypeId = ids.ConcernTypeId
-        ))
-      );";
+AND NOT EXISTS (
+    SELECT 1
+    FROM dbo.ProductConcerns
+    WHERE productid = @ProductId AND concernID = @ConcernId
+)
+BEGIN
+    INSERT INTO dbo.ProductConcerns (productid, concernID)
+    VALUES (@ProductId, @ConcernId);
+END", insertParams, CommandType.Text);
+            }
+        }
 
-            await _dapper.ExecuteAsync(sql, p, CommandType.Text);
+        private static List<int> NormalizeConcernIds(List<int>? concernTypeIds)
+        {
+            return (concernTypeIds ?? new List<int>())
+                .Where(id => id > 0)
+                .Distinct()
+                .ToList();
         }
     }
 }
