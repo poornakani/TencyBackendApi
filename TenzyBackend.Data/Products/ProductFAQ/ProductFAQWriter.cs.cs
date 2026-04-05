@@ -1,8 +1,10 @@
 ﻿using Dapper;
 using Microsoft.Extensions.Logging;
+using SharedResources.Exceptions;
 using SharedResources.Infrastructure.Base;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Text;
 using TenzyBackend.Data.Products.ConcernType;
 using TenzyBackend.DBContext;
@@ -52,6 +54,20 @@ namespace TenzyBackend.Data.Products.ProductFAQ
             dynamicParameters.Add("@Question", entity.Question);
             dynamicParameters.Add("@Answer", entity.Answer);    
             return dynamicParameters;
+        }
+
+        public override async Task<bool> UpdateAsync(ProductFAQEntity entity)
+        {
+            var parameters = BuildUpdateParameters(entity);
+            var rows = await _dapperPro.ExecuteAsync(
+                UpdateProcedureName,
+                parameters,
+                commandType: CommandType.StoredProcedure);
+
+            if (rows == 0)
+                throw new NotFoundException($"{typeof(ProductFAQEntity).Name} not found.");
+
+            return true;
         }
     }
 }
