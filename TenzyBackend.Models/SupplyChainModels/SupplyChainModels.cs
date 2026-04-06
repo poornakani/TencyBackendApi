@@ -21,6 +21,8 @@ namespace TenzyBackend.Models.SupplyChainModels
         public string ShopName { get; set; } = string.Empty;
         public DateTime PurchaseDate { get; set; }
         public string InvoiceReference { get; set; } = string.Empty;
+        public string? PaymentCardName { get; set; }
+        public string? PaymentReference { get; set; }
         public string Status { get; set; } = string.Empty;
         public decimal TotalGrossAmount { get; set; }
         public decimal TotalDiscountAmount { get; set; }
@@ -88,6 +90,8 @@ namespace TenzyBackend.Models.SupplyChainModels
         public string ShopName { get; set; } = string.Empty;
         public DateTime PurchaseDate { get; set; }
         public string InvoiceReference { get; set; } = string.Empty;
+        public string? PaymentCardName { get; set; }
+        public string? PaymentReference { get; set; }
         public string? PurchaseNote { get; set; }
         public List<SaveProcurementItemRequest> Items { get; set; } = new();
         public List<SaveDiscountRequest> Discounts { get; set; } = new();
@@ -307,6 +311,8 @@ namespace TenzyBackend.Models.SupplyChainModels
         public DateTime PurchaseDate { get; set; }
         public string ShopName { get; set; } = string.Empty;
         public string InvoiceReference { get; set; } = string.Empty;
+        public string? PaymentCardName { get; set; }
+        public string? PaymentReference { get; set; }
         public string ProductName { get; set; } = string.Empty;
         public string BrandName { get; set; } = string.Empty;
         public string CategoryName { get; set; } = string.Empty;

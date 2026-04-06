@@ -78,6 +78,8 @@ namespace TenzyBackend.Core.Services.SupplyChainService
                 ShopName = request.ShopName.Trim(),
                 PurchaseDate = request.PurchaseDate == default ? DateTime.UtcNow : request.PurchaseDate,
                 InvoiceReference = request.InvoiceReference.Trim(),
+                PaymentCardName = string.IsNullOrWhiteSpace(request.PaymentCardName) ? null : request.PaymentCardName.Trim(),
+                PaymentReference = string.IsNullOrWhiteSpace(request.PaymentReference) ? null : request.PaymentReference.Trim(),
                 PurchaseNote = string.IsNullOrWhiteSpace(request.PurchaseNote) ? null : request.PurchaseNote.Trim(),
                 Items = request.Items,
                 Discounts = request.Discounts,

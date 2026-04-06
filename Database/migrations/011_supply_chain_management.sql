@@ -51,6 +51,8 @@ CREATE TABLE dbo.SupplyProcurements (
     ShopName NVARCHAR(150) NOT NULL,
     PurchaseDate DATETIME2 NOT NULL,
     InvoiceReference NVARCHAR(120) NOT NULL,
+    PaymentCardName NVARCHAR(120) NULL,
+    PaymentReference NVARCHAR(150) NULL,
     Status NVARCHAR(30) NOT NULL CONSTRAINT DF_SupplyProcurements_Status DEFAULT ('procured'),
     PurchaseNote NVARCHAR(500) NULL,
     EnteredByUserId UNIQUEIDENTIFIER NOT NULL,
@@ -250,6 +252,8 @@ BEGIN
         p.ShopName,
         p.PurchaseDate,
         p.InvoiceReference,
+        p.PaymentCardName,
+        p.PaymentReference,
         p.Status,
         p.PurchaseNote,
         TotalGrossAmount = ISNULL(SUM(i.GrossTotal), 0),
@@ -258,7 +262,7 @@ BEGIN
         ItemCount = COUNT(i.ProcurementItemId)
     FROM dbo.SupplyProcurements p
     LEFT JOIN dbo.SupplyProcurementItems i ON i.ProcurementId = p.ProcurementId
-    GROUP BY p.ProcurementId, p.ProcurementReference, p.ShopName, p.PurchaseDate, p.InvoiceReference, p.Status, p.PurchaseNote
+    GROUP BY p.ProcurementId, p.ProcurementReference, p.ShopName, p.PurchaseDate, p.InvoiceReference, p.PaymentCardName, p.PaymentReference, p.Status, p.PurchaseNote
     ORDER BY p.PurchaseDate DESC, p.ProcurementId DESC;
 END;
 GO
@@ -275,6 +279,8 @@ BEGIN
         p.ShopName,
         p.PurchaseDate,
         p.InvoiceReference,
+        p.PaymentCardName,
+        p.PaymentReference,
         p.Status,
         p.PurchaseNote,
         p.EnteredByUserId,
@@ -342,6 +348,8 @@ CREATE OR ALTER PROCEDURE dbo.spSupplyProcurement_Save
     @ShopName NVARCHAR(150),
     @PurchaseDate DATETIME2,
     @InvoiceReference NVARCHAR(120),
+    @PaymentCardName NVARCHAR(120) = NULL,
+    @PaymentReference NVARCHAR(150) = NULL,
     @PurchaseNote NVARCHAR(500) = NULL,
     @EnteredByUserId UNIQUEIDENTIFIER,
     @ItemsJson NVARCHAR(MAX),
@@ -356,8 +364,8 @@ BEGIN
 
     IF @ProcurementId IS NULL
     BEGIN
-        INSERT INTO dbo.SupplyProcurements (ProcurementReference, ShopName, PurchaseDate, InvoiceReference, PurchaseNote, EnteredByUserId)
-        VALUES (@ProcurementReference, @ShopName, @PurchaseDate, @InvoiceReference, @PurchaseNote, @EnteredByUserId);
+        INSERT INTO dbo.SupplyProcurements (ProcurementReference, ShopName, PurchaseDate, InvoiceReference, PaymentCardName, PaymentReference, PurchaseNote, EnteredByUserId)
+        VALUES (@ProcurementReference, @ShopName, @PurchaseDate, @InvoiceReference, @PaymentCardName, @PaymentReference, @PurchaseNote, @EnteredByUserId);
 
         SET @ProcurementId = SCOPE_IDENTITY();
     END
@@ -368,6 +376,8 @@ BEGIN
             ShopName = @ShopName,
             PurchaseDate = @PurchaseDate,
             InvoiceReference = @InvoiceReference,
+            PaymentCardName = @PaymentCardName,
+            PaymentReference = @PaymentReference,
             PurchaseNote = @PurchaseNote,
             UpdatedAtUtc = SYSUTCDATETIME()
         WHERE ProcurementId = @ProcurementId;
@@ -1006,6 +1016,8 @@ BEGIN
         p.PurchaseDate,
         p.ShopName,
         p.InvoiceReference,
+        p.PaymentCardName,
+        p.PaymentReference,
         i.ProductName,
         i.BrandName,
         i.CategoryName,

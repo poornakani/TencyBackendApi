@@ -24,6 +24,8 @@ namespace TenzyBackend.Data.SupplyChain
             p.Add("@ShopName", request.ShopName, DbType.String);
             p.Add("@PurchaseDate", request.PurchaseDate, DbType.DateTime2);
             p.Add("@InvoiceReference", request.InvoiceReference, DbType.String);
+            p.Add("@PaymentCardName", request.PaymentCardName, DbType.String);
+            p.Add("@PaymentReference", request.PaymentReference, DbType.String);
             p.Add("@PurchaseNote", request.PurchaseNote, DbType.String);
             p.Add("@EnteredByUserId", userId, DbType.Guid);
             p.Add("@ItemsJson", itemsJson, DbType.String);
