@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace TenzyBackend.Models.ProductsModels
 {
@@ -10,6 +11,7 @@ namespace TenzyBackend.Models.ProductsModels
     {
         [Key]
         [Column("FAQId")]
+        [JsonPropertyName("faqId")]
         public int FAQId { get; set; }
 
         [Required]
