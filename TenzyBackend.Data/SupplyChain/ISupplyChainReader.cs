@@ -19,5 +19,6 @@ namespace TenzyBackend.Data.SupplyChain
         Task<List<SupplyProcurementReportRowModel>> GetProcurementReportAsync(DateTime? startDate, DateTime? endDate, string? shop, string? brand, string? product, string? category);
         Task<List<SupplyDispatchReportRowModel>> GetDispatchReportAsync(DateTime? startDate, DateTime? endDate, string? courier, string? brand, string? product, string? category, string? shipmentStatus);
         Task<List<SupplyMonthlyDispatchSummaryModel>> GetMonthlyDispatchSummaryAsync(DateTime? startDate, DateTime? endDate);
+        Task<List<DeletedItemLogModel>> GetDeletedItemsAsync(string? tableName);
     }
 }

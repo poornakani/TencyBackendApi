@@ -24,5 +24,10 @@ namespace TenzyBackend.Core.Services.SupplyChainService
         Task<List<SupplyProcurementReportRowModel>> GetProcurementReportAsync(DateTime? startDate, DateTime? endDate, string? shop, string? brand, string? product, string? category);
         Task<List<SupplyDispatchReportRowModel>> GetDispatchReportAsync(DateTime? startDate, DateTime? endDate, string? courier, string? brand, string? product, string? category, string? shipmentStatus);
         Task<List<SupplyMonthlyDispatchSummaryModel>> GetMonthlyDispatchSummaryAsync(DateTime? startDate, DateTime? endDate);
+        Task DeleteProcurementItemAsync(int procurementItemId, string? reason, Guid userId);
+        Task UpdateProcurementItemAsync(int procurementItemId, UpdateProcurementItemRequest request);
+        Task DeleteDispatchItemAsync(int shipmentItemId, string? reason, Guid userId);
+        Task UpdateDispatchItemAsync(int shipmentItemId, UpdateDispatchItemRequest request);
+        Task<List<DeletedItemLogModel>> GetDeletedItemsAsync(string? tableName);
     }
 }

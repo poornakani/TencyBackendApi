@@ -93,5 +93,44 @@ namespace TenzyBackend.Data.SupplyChain
 
             return await _dapper.InsertAsync<int>("spSupplyPricing_Save", p, CommandType.StoredProcedure);
         }
+
+        public async Task DeleteProcurementItemAsync(int procurementItemId, string? reason, Guid userId)
+        {
+            var p = new DynamicParameters();
+            p.Add("@ProcurementItemId", procurementItemId, DbType.Int32);
+            p.Add("@DeletionReason", reason, DbType.String);
+            p.Add("@DeletedByUserId", userId, DbType.Guid);
+            await _dapper.ExecuteAsync("spSupplyProcurementItem_SoftDelete", p, CommandType.StoredProcedure);
+        }
+
+        public async Task UpdateProcurementItemAsync(int procurementItemId, UpdateProcurementItemRequest request)
+        {
+            var p = new DynamicParameters();
+            p.Add("@ProcurementItemId", procurementItemId, DbType.Int32);
+            p.Add("@ProductName", request.ProductName, DbType.String);
+            p.Add("@BrandName", request.BrandName, DbType.String);
+            p.Add("@CategoryName", request.CategoryName, DbType.String);
+            p.Add("@Quantity", request.Quantity, DbType.Int32);
+            p.Add("@UnitPrice", request.UnitPrice, DbType.Decimal);
+            p.Add("@BatchNote", request.BatchNote, DbType.String);
+            await _dapper.ExecuteAsync("spSupplyProcurementItem_Update", p, CommandType.StoredProcedure);
+        }
+
+        public async Task DeleteDispatchItemAsync(int shipmentItemId, string? reason, Guid userId)
+        {
+            var p = new DynamicParameters();
+            p.Add("@ShipmentItemId", shipmentItemId, DbType.Int32);
+            p.Add("@DeletionReason", reason, DbType.String);
+            p.Add("@DeletedByUserId", userId, DbType.Guid);
+            await _dapper.ExecuteAsync("spSupplyDispatchItem_SoftDelete", p, CommandType.StoredProcedure);
+        }
+
+        public async Task UpdateDispatchItemAsync(int shipmentItemId, UpdateDispatchItemRequest request)
+        {
+            var p = new DynamicParameters();
+            p.Add("@ShipmentItemId", shipmentItemId, DbType.Int32);
+            p.Add("@QuantityDispatched", request.QuantityDispatched, DbType.Int32);
+            await _dapper.ExecuteAsync("spSupplyDispatchItem_Update", p, CommandType.StoredProcedure);
+        }
     }
 }

@@ -273,6 +273,46 @@ namespace TenzyBackend.Core.Services.SupplyChainService
         public Task<List<SupplyMonthlyDispatchSummaryModel>> GetMonthlyDispatchSummaryAsync(DateTime? startDate, DateTime? endDate)
             => _reader.GetMonthlyDispatchSummaryAsync(startDate, endDate);
 
+        public async Task DeleteProcurementItemAsync(int procurementItemId, string? reason, Guid userId)
+        {
+            if (procurementItemId <= 0) throw new ValidationException("Invalid procurement item id.");
+            await _writer.DeleteProcurementItemAsync(procurementItemId, reason?.Trim(), userId);
+        }
+
+        public async Task UpdateProcurementItemAsync(int procurementItemId, UpdateProcurementItemRequest request)
+        {
+            if (procurementItemId <= 0) throw new ValidationException("Invalid procurement item id.");
+            if (string.IsNullOrWhiteSpace(request.ProductName)) throw new ValidationException("Product name is required.");
+            if (request.Quantity <= 0) throw new ValidationException("Quantity must be greater than zero.");
+            if (request.UnitPrice <= 0) throw new ValidationException("Unit price must be greater than zero.");
+
+            var sanitized = new UpdateProcurementItemRequest
+            {
+                ProductName  = request.ProductName.Trim(),
+                BrandName    = (request.BrandName ?? string.Empty).Trim(),
+                CategoryName = (request.CategoryName ?? string.Empty).Trim(),
+                Quantity     = request.Quantity,
+                UnitPrice    = Math.Round(request.UnitPrice, 2, MidpointRounding.AwayFromZero),
+                BatchNote    = string.IsNullOrWhiteSpace(request.BatchNote) ? null : request.BatchNote.Trim(),
+            };
+            await _writer.UpdateProcurementItemAsync(procurementItemId, sanitized);
+        }
+
+        public async Task DeleteDispatchItemAsync(int shipmentItemId, string? reason, Guid userId)
+        {
+            if (shipmentItemId <= 0) throw new ValidationException("Invalid shipment item id.");
+            await _writer.DeleteDispatchItemAsync(shipmentItemId, reason?.Trim(), userId);
+        }
+
+        public async Task UpdateDispatchItemAsync(int shipmentItemId, UpdateDispatchItemRequest request)
+        {
+            if (shipmentItemId <= 0) throw new ValidationException("Invalid shipment item id.");
+            if (request.QuantityDispatched <= 0) throw new ValidationException("Quantity dispatched must be greater than zero.");
+            await _writer.UpdateDispatchItemAsync(shipmentItemId, request);
+        }
+
+        public Task<List<DeletedItemLogModel>> GetDeletedItemsAsync(string? tableName) => _reader.GetDeletedItemsAsync(tableName);
+
         private static List<PreparedDiscount> PrepareDiscounts(SaveProcurementRequest request, List<PreparedProcurementItem> items)
         {
             var prepared = new List<PreparedDiscount>();

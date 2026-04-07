@@ -11,5 +11,9 @@ namespace TenzyBackend.Data.SupplyChain
         Task<int> AddShipmentChargeAsync(int shipmentId, AddShipmentChargeRequest request, Guid userId);
         Task<int> SaveArrivalAsync(SaveArrivalRequest request, string itemsJson, Guid userId);
         Task<int> SavePricingAsync(SavePricingRequest request, Guid userId);
+        Task DeleteProcurementItemAsync(int procurementItemId, string? reason, Guid userId);
+        Task UpdateProcurementItemAsync(int procurementItemId, UpdateProcurementItemRequest request);
+        Task DeleteDispatchItemAsync(int shipmentItemId, string? reason, Guid userId);
+        Task UpdateDispatchItemAsync(int shipmentItemId, UpdateDispatchItemRequest request);
     }
 }

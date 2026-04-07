@@ -305,6 +305,45 @@ namespace TenzyBackend.Models.SupplyChainModels
         public bool IsApproved { get; set; } = true;
     }
 
+    // ── Stock item delete / update requests ───────────────────────────────────
+
+    public class DeleteStockItemRequest
+    {
+        public string? DeletionReason { get; set; }
+    }
+
+    public class UpdateProcurementItemRequest
+    {
+        public string ProductName { get; set; } = string.Empty;
+        public string BrandName { get; set; } = string.Empty;
+        public string CategoryName { get; set; } = string.Empty;
+        public int Quantity { get; set; }
+        public decimal UnitPrice { get; set; }
+        public string? BatchNote { get; set; }
+    }
+
+    public class UpdateDispatchItemRequest
+    {
+        public int QuantityDispatched { get; set; }
+    }
+
+    public class DeletedItemLogModel
+    {
+        public int LogId { get; set; }
+        public string TableName { get; set; } = string.Empty;
+        public int RecordId { get; set; }
+        public int? ProcurementId { get; set; }
+        public int? ShipmentId { get; set; }
+        public string? ProductName { get; set; }
+        public string? BrandName { get; set; }
+        public string? CategoryName { get; set; }
+        public int? Quantity { get; set; }
+        public decimal? NetUnitCost { get; set; }
+        public string? DeletionReason { get; set; }
+        public Guid? DeletedByUserId { get; set; }
+        public DateTime DeletedAtUtc { get; set; }
+    }
+
     public class SupplyProcurementReportRowModel
     {
         public string ProcurementReference { get; set; } = string.Empty;

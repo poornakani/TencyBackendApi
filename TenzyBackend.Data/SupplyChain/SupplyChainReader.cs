@@ -164,5 +164,15 @@ namespace TenzyBackend.Data.SupplyChain
                 p,
                 CommandType.StoredProcedure);
         }
+
+        public async Task<List<DeletedItemLogModel>> GetDeletedItemsAsync(string? tableName)
+        {
+            var p = new DynamicParameters();
+            p.Add("@TableName", tableName, DbType.String);
+            return await _dapper.GetAllAsync<DeletedItemLogModel>(
+                "spSupplyDeletedItems_GetAll",
+                p,
+                CommandType.StoredProcedure);
+        }
     }
 }

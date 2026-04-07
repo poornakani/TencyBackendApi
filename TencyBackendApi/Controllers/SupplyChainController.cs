@@ -124,6 +124,44 @@ namespace TencyBackendApi.Controllers
         public async Task<IActionResult> GetMonthlyDispatchSummary([FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate)
             => Ok(new ApiResponseModel { result = true, response = await _service.GetMonthlyDispatchSummaryAsync(startDate, endDate) });
 
+        // ── Stock item delete / update ─────────────────────────────────────────
+
+        [HttpPost("procurements/items/{procurementItemId:int}/delete")]
+        public async Task<IActionResult> DeleteProcurementItem(int procurementItemId, [FromBody] DeleteStockItemRequest request)
+        {
+            var userId = GetAdminUserId();
+            if (userId == null) return Unauthorized(new ApiResponseModel { result = false, message = "Invalid token." });
+            await _service.DeleteProcurementItemAsync(procurementItemId, request.DeletionReason, userId.Value);
+            return Ok(new ApiResponseModel { result = true, message = "Item deleted." });
+        }
+
+        [HttpPost("procurements/items/{procurementItemId:int}/update")]
+        public async Task<IActionResult> UpdateProcurementItem(int procurementItemId, [FromBody] UpdateProcurementItemRequest request)
+        {
+            await _service.UpdateProcurementItemAsync(procurementItemId, request);
+            return Ok(new ApiResponseModel { result = true, message = "Item updated." });
+        }
+
+        [HttpPost("dispatches/items/{shipmentItemId:int}/delete")]
+        public async Task<IActionResult> DeleteDispatchItem(int shipmentItemId, [FromBody] DeleteStockItemRequest request)
+        {
+            var userId = GetAdminUserId();
+            if (userId == null) return Unauthorized(new ApiResponseModel { result = false, message = "Invalid token." });
+            await _service.DeleteDispatchItemAsync(shipmentItemId, request.DeletionReason, userId.Value);
+            return Ok(new ApiResponseModel { result = true, message = "Item deleted." });
+        }
+
+        [HttpPost("dispatches/items/{shipmentItemId:int}/update")]
+        public async Task<IActionResult> UpdateDispatchItem(int shipmentItemId, [FromBody] UpdateDispatchItemRequest request)
+        {
+            await _service.UpdateDispatchItemAsync(shipmentItemId, request);
+            return Ok(new ApiResponseModel { result = true, message = "Item updated." });
+        }
+
+        [HttpGet("deleted-items")]
+        public async Task<IActionResult> GetDeletedItems([FromQuery] string? tableName)
+            => Ok(new ApiResponseModel { result = true, response = await _service.GetDeletedItemsAsync(tableName) });
+
         private Guid? GetAdminUserId()
         {
             var raw = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("sub")?.Value;
