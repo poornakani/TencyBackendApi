@@ -89,9 +89,20 @@ namespace TenzyBackend.Data.SupplyChain
             p.Add("@CustomerDiscountAmount", request.CustomerDiscountAmount, DbType.Decimal);
             p.Add("@PricingNotes", request.PricingNotes, DbType.String);
             p.Add("@IsApproved", request.IsApproved, DbType.Boolean);
+            p.Add("@ApplicationMode", request.ApplicationMode, DbType.String);
             p.Add("@ApprovedByUserId", userId, DbType.Guid);
 
             return await _dapper.InsertAsync<int>("spSupplyPricing_Save", p, CommandType.StoredProcedure);
+        }
+
+        public async Task<int> ActivatePricingAsync(int pricingId, bool forceActivate, Guid userId)
+        {
+            var p = new DynamicParameters();
+            p.Add("@PricingId", pricingId, DbType.Int32);
+            p.Add("@ForceActivate", forceActivate, DbType.Boolean);
+            p.Add("@ApprovedByUserId", userId, DbType.Guid);
+
+            return await _dapper.InsertAsync<int>("spSupplyPricing_Activate", p, CommandType.StoredProcedure);
         }
 
         public async Task DeleteProcurementItemAsync(int procurementItemId, string? reason, Guid userId)

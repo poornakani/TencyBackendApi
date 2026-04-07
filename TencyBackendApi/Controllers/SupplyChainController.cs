@@ -112,6 +112,17 @@ namespace TencyBackendApi.Controllers
             return Ok(new ApiResponseModel { result = true, message = "Pricing saved.", response = new { id } });
         }
 
+        [HttpPost("pricing/{pricingId:int}/activate")]
+        public async Task<IActionResult> ActivatePricing(int pricingId, [FromBody] ActivatePricingRequest? request)
+        {
+            var userId = GetAdminUserId();
+            if (userId == null)
+                return Unauthorized(new ApiResponseModel { result = false, message = "Invalid token." });
+
+            var id = await _service.ActivatePricingAsync(pricingId, request?.ForceActivate ?? false, userId.Value);
+            return Ok(new ApiResponseModel { result = true, message = "Pricing activated.", response = new { id } });
+        }
+
         [HttpGet("reports/procurement")]
         public async Task<IActionResult> GetProcurementReport([FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate, [FromQuery] string? shop, [FromQuery] string? brand, [FromQuery] string? product, [FromQuery] string? category)
             => Ok(new ApiResponseModel { result = true, response = await _service.GetProcurementReportAsync(startDate, endDate, shop, brand, product, category) });

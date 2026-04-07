@@ -249,6 +249,8 @@ namespace TenzyBackend.Core.Services.SupplyChainService
                 throw new ValidationException("Selling price must be greater than zero.");
             if (request.CustomerDiscountPercent < 0 || request.CustomerDiscountAmount < 0)
                 throw new ValidationException("Discount values cannot be negative.");
+            if (!IsValidPricingApplicationMode(request.ApplicationMode))
+                throw new ValidationException("Invalid pricing application mode.");
 
             var sanitizedRequest = new SavePricingRequest
             {
@@ -259,9 +261,18 @@ namespace TenzyBackend.Core.Services.SupplyChainService
                 CustomerDiscountAmount = RoundMoney(request.CustomerDiscountAmount),
                 PricingNotes = string.IsNullOrWhiteSpace(request.PricingNotes) ? null : request.PricingNotes.Trim(),
                 IsApproved = request.IsApproved,
+                ApplicationMode = NormalizePricingApplicationMode(request.ApplicationMode),
             };
 
             return await _writer.SavePricingAsync(sanitizedRequest, userId);
+        }
+
+        public async Task<int> ActivatePricingAsync(int pricingId, bool forceActivate, Guid userId)
+        {
+            if (pricingId <= 0)
+                throw new ValidationException("A pricing record is required.");
+
+            return await _writer.ActivatePricingAsync(pricingId, forceActivate, userId);
         }
 
         public Task<List<SupplyProcurementReportRowModel>> GetProcurementReportAsync(DateTime? startDate, DateTime? endDate, string? shop, string? brand, string? product, string? category)
@@ -461,6 +472,14 @@ namespace TenzyBackend.Core.Services.SupplyChainService
         }
 
         private static decimal RoundMoney(decimal value) => Math.Round(value, 2, MidpointRounding.AwayFromZero);
+
+        private static bool IsValidPricingApplicationMode(string? mode)
+            => mode == null || mode.Trim().Length == 0 || NormalizePricingApplicationMode(mode) is "merge_into_live" or "wait_for_current_stock";
+
+        private static string NormalizePricingApplicationMode(string? mode)
+            => string.Equals(mode?.Trim(), "wait_for_current_stock", StringComparison.OrdinalIgnoreCase)
+                ? "wait_for_current_stock"
+                : "merge_into_live";
 
         private static string NormalizeCode(string? value, string prefix, DateTime date)
         {

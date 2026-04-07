@@ -21,6 +21,7 @@ namespace TenzyBackend.Core.Services.SupplyChainService
         Task<List<EligiblePricingItemModel>> GetEligiblePricingItemsAsync();
         Task<List<SupplyPricingModel>> GetPricingAsync();
         Task<int> SavePricingAsync(SavePricingRequest request, Guid userId);
+        Task<int> ActivatePricingAsync(int pricingId, bool forceActivate, Guid userId);
         Task<List<SupplyProcurementReportRowModel>> GetProcurementReportAsync(DateTime? startDate, DateTime? endDate, string? shop, string? brand, string? product, string? category);
         Task<List<SupplyDispatchReportRowModel>> GetDispatchReportAsync(DateTime? startDate, DateTime? endDate, string? courier, string? brand, string? product, string? category, string? shipmentStatus);
         Task<List<SupplyMonthlyDispatchSummaryModel>> GetMonthlyDispatchSummaryAsync(DateTime? startDate, DateTime? endDate);

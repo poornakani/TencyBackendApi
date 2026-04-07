@@ -261,6 +261,7 @@ namespace TenzyBackend.Models.SupplyChainModels
     public class EligiblePricingItemModel
     {
         public int ArrivalItemId { get; set; }
+        public int? PricingId { get; set; }
         public int ShipmentId { get; set; }
         public string DispatchReference { get; set; } = string.Empty;
         public int? ProductId { get; set; }
@@ -271,6 +272,12 @@ namespace TenzyBackend.Models.SupplyChainModels
         public decimal LandedUnitCost { get; set; }
         public decimal LandedTotalCost { get; set; }
         public bool IsPriced { get; set; }
+        public bool IsApproved { get; set; }
+        public string PricingReviewStatus { get; set; } = "pending_price_approval";
+        public string ApplicationMode { get; set; } = "pending_price_approval";
+        public decimal CurrentSellingPrice { get; set; }
+        public decimal CurrentOriginalPrice { get; set; }
+        public int CurrentStockQuantity { get; set; }
     }
 
     public class SupplyPricingModel
@@ -291,6 +298,9 @@ namespace TenzyBackend.Models.SupplyChainModels
         public decimal MarginPercent { get; set; }
         public string? PricingNotes { get; set; }
         public bool IsApproved { get; set; }
+        public string ApplicationMode { get; set; } = "merge_into_live";
+        public string PricingReviewStatus { get; set; } = "pending_price_approval";
+        public DateTime? AppliedToProductAtUtc { get; set; }
         public DateTime ApprovedAtUtc { get; set; }
     }
 
@@ -303,6 +313,12 @@ namespace TenzyBackend.Models.SupplyChainModels
         public decimal CustomerDiscountAmount { get; set; }
         public string? PricingNotes { get; set; }
         public bool IsApproved { get; set; } = true;
+        public string ApplicationMode { get; set; } = "merge_into_live";
+    }
+
+    public class ActivatePricingRequest
+    {
+        public bool ForceActivate { get; set; }
     }
 
     // ── Stock item delete / update requests ───────────────────────────────────
