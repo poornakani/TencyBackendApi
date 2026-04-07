@@ -2,6 +2,8 @@ using SharedResources.Exceptions;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TenzyBackend.Core.Mapping;
+using TenzyBackend.Data.Products.Brand;
+using TenzyBackend.Data.Products.Category;
 using TenzyBackend.Data.Products.ProductCatalog;
 using TenzyBackend.Entity.ProductsEntity;
 using TenzyBackend.Models.ProductsModels;
@@ -13,15 +15,21 @@ namespace TenzyBackend.Core.Services.ProductsService.ProductCatalogService
         private readonly IProductCatalogReader _reader;
         private readonly IProductCatalogWriter _writer;
         private readonly IObjectMapper _mapper;
+        private readonly IBrandReader _brandReader;
+        private readonly ICategoryReader _categoryReader;
 
         public ProductCatalogService(
             IProductCatalogReader reader,
             IProductCatalogWriter writer,
-            IObjectMapper mapper)
+            IObjectMapper mapper,
+            IBrandReader brandReader,
+            ICategoryReader categoryReader)
         {
             _reader = reader;
             _writer = writer;
             _mapper = mapper;
+            _brandReader = brandReader;
+            _categoryReader = categoryReader;
         }
 
         public async Task<List<ProductCatalogModel>> GetAllProductsAsync()
@@ -57,6 +65,14 @@ namespace TenzyBackend.Core.Services.ProductsService.ProductCatalogService
                 throw new ValidationException("Category is required.");
             if (request.SellingPrice < 0)
                 throw new ValidationException("Selling price cannot be negative.");
+            if (request.OriginalPrice < 0)
+                throw new ValidationException("Original price cannot be negative.");
+            if (request.StockQuantity < 0)
+                throw new ValidationException("Stock quantity cannot be negative.");
+            if (await _brandReader.GetByIdAsync(request.BrandId) == null)
+                throw new ValidationException("Selected brand was not found.");
+            if (await _categoryReader.GetByIdAsync(request.CategoryId) == null)
+                throw new ValidationException("Selected category was not found.");
 
             return await _writer.CreateAsync(request);
         }
@@ -67,6 +83,20 @@ namespace TenzyBackend.Core.Services.ProductsService.ProductCatalogService
                 throw new ValidationException("Invalid product id.");
             if (string.IsNullOrWhiteSpace(request.Name))
                 throw new ValidationException("Product name is required.");
+            if (request.BrandId <= 0)
+                throw new ValidationException("Brand is required.");
+            if (request.CategoryId <= 0)
+                throw new ValidationException("Category is required.");
+            if (request.SellingPrice.HasValue && request.SellingPrice.Value < 0)
+                throw new ValidationException("Selling price cannot be negative.");
+            if (request.OriginalPrice.HasValue && request.OriginalPrice.Value < 0)
+                throw new ValidationException("Original price cannot be negative.");
+            if (request.StockQuantity.HasValue && request.StockQuantity.Value < 0)
+                throw new ValidationException("Stock quantity cannot be negative.");
+            if (await _brandReader.GetByIdAsync(request.BrandId) == null)
+                throw new ValidationException("Selected brand was not found.");
+            if (await _categoryReader.GetByIdAsync(request.CategoryId) == null)
+                throw new ValidationException("Selected category was not found.");
 
             var existing = await _reader.GetByIdAsync(request.ProductId)
                 ?? throw new NotFoundException("Product not found.");
