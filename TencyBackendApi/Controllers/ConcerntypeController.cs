@@ -21,6 +21,7 @@ namespace TencyBackendApi.Controllers
 
         // GET: api/concerns
         [HttpGet]
+        [AllowAnonymous]
         public async Task<IActionResult> GetAllConcerns()
         {
             var concerns = await _concernService.GetAllConcernsAsync();
@@ -29,6 +30,7 @@ namespace TencyBackendApi.Controllers
 
         // GET: api/concerns/5
         [HttpGet("{id:int}", Name = "GetConcernById")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetConcernById(int id)
         {
             if (id <= 0) return BadRequest();

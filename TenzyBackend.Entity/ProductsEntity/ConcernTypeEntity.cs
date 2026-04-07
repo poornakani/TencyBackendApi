@@ -21,5 +21,7 @@ namespace TenzyBackend.Entity.ProductsEntity
         public string Description { get; set; } = string.Empty;
 
         public bool IsActive { get; set; }
+        public string? CategoryIdsCsv { get; set; }
+        public string? CategoryNamesCsv { get; set; }
     }
 }
