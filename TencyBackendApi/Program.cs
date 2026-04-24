@@ -80,7 +80,7 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 // ──────────────────────────────────────────────────────────────
-// CORS — dev + GitHub Pages production
+// CORS — dev + GitHub Pages + Windows Server production
 // ──────────────────────────────────────────────────────────────
 builder.Services.AddCors(options =>
 {
@@ -89,7 +89,9 @@ builder.Services.AddCors(options =>
             .WithOrigins(
                 "http://localhost:5173",
                 "http://localhost:3000",
-                "https://poornakani.github.io"   // GitHub Pages production
+                "https://poornakani.github.io",       // GitHub Pages
+                "https://www.tenzy.dotnetcloud.co.uk", // Windows Server (HTTPS)
+                "http://www.tenzy.dotnetcloud.co.uk"   // Windows Server (HTTP)
             )
             .AllowAnyHeader()
             .AllowAnyMethod()
