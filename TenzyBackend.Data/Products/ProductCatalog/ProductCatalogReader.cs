@@ -48,11 +48,12 @@ namespace TenzyBackend.Data.Products.ProductCatalog
             p.Add("@ProductId", productId);
             var rows = await _dapperPro.GetAllAsync<ProductPaymentOptionModel>(
                 @"IF OBJECT_ID('dbo.ProductPaymentOptions', 'U') IS NULL
-                      SELECT CAST(NULL AS INT) AS PaymentTypeId, CAST(NULL AS INT) AS Instalment WHERE 1 = 0;
+                      SELECT CAST(NULL AS INT) AS PaymentTypeId, CAST(NULL AS NVARCHAR(100)) AS PaymentType, CAST(NULL AS INT) AS Instalment WHERE 1 = 0;
                   ELSE
-                      SELECT PaymentTypeId, instalment AS Instalment
-                      FROM dbo.ProductPaymentOptions
-                      WHERE productid = @ProductId",
+                      SELECT pp.PaymentTypeId, pt.PaymentType, pp.instalment AS Instalment
+                      FROM dbo.ProductPaymentOptions pp
+                      LEFT JOIN dbo.PaymentType pt ON pt.PaymentTypeId = pp.PaymentTypeId
+                      WHERE pp.productid = @ProductId",
                 p, CommandType.Text);
             return rows;
         }

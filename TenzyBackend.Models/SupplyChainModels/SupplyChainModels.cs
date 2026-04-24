@@ -48,6 +48,7 @@ namespace TenzyBackend.Models.SupplyChainModels
         public string BrandName { get; set; } = string.Empty;
         public string CategoryName { get; set; } = string.Empty;
         public int Quantity { get; set; }
+        public int QuantityAlreadyDispatched { get; set; }
         public decimal UnitPrice { get; set; }
         public decimal GrossTotal { get; set; }
         public decimal DiscountTotal { get; set; }
@@ -157,6 +158,7 @@ namespace TenzyBackend.Models.SupplyChainModels
         public int QuantityDispatched { get; set; }
         public decimal NetUnitCost { get; set; }
         public decimal NetAmount { get; set; }
+        public decimal TaxAmount { get; set; }
     }
 
     public class SupplyShipmentChargeModel
@@ -186,6 +188,7 @@ namespace TenzyBackend.Models.SupplyChainModels
     {
         public int ProcurementItemId { get; set; }
         public int QuantityDispatched { get; set; }
+        public decimal TaxAmount { get; set; }
     }
 
     public class AddShipmentChargeRequest
@@ -362,6 +365,7 @@ namespace TenzyBackend.Models.SupplyChainModels
 
     public class SupplyProcurementReportRowModel
     {
+        public int ProcurementItemId { get; set; }
         public string ProcurementReference { get; set; } = string.Empty;
         public DateTime PurchaseDate { get; set; }
         public string ShopName { get; set; } = string.Empty;
@@ -387,11 +391,19 @@ namespace TenzyBackend.Models.SupplyChainModels
         public string CourierName { get; set; } = string.Empty;
         public string ParcelNumber { get; set; } = string.Empty;
         public string ShipmentStatus { get; set; } = string.Empty;
+        public string? Notes { get; set; }
+        public int ShipmentItemId { get; set; }
+        public int ProcurementItemId { get; set; }
         public string ProductName { get; set; } = string.Empty;
         public string BrandName { get; set; } = string.Empty;
         public string CategoryName { get; set; } = string.Empty;
         public int QuantityDispatched { get; set; }
+        public decimal UnitPrice { get; set; }
+        public decimal GrossTotal { get; set; }
+        public decimal DiscountTotal { get; set; }
+        public string? DiscountDescription { get; set; }
         public decimal ProductCost { get; set; }
+        public decimal NetUnitCost { get; set; }
         public decimal UkCourierCharge { get; set; }
         public decimal SriLankaCourierCharge { get; set; }
         public decimal TaxCharge { get; set; }

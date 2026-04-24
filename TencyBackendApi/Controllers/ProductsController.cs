@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using System.Text.Json;
+using TenzyBackend.Core.Services.AuditService;
 using TenzyBackend.Core.Services.ProductsService.ProductCatalogService;
 using TenzyBackend.Models.ApiResponseModels;
 using TenzyBackend.Models.ProductsModels;
@@ -11,10 +14,12 @@ namespace TencyBackendApi.Controllers
     public class ProductsController : ControllerBase
     {
         private readonly IProductCatalogService _productService;
+        private readonly IAuditService _audit;
 
-        public ProductsController(IProductCatalogService productService)
+        public ProductsController(IProductCatalogService productService, IAuditService audit)
         {
             _productService = productService;
+            _audit          = audit;
         }
 
         // GET /api/products — public, used by storefront (insale only)
@@ -49,9 +54,26 @@ namespace TencyBackendApi.Controllers
         [Authorize(Roles = "3")]
         public async Task<IActionResult> Create([FromBody] CreateProductRequest request)
         {
-            var newId = await _productService.CreateProductAsync(request);
-            return CreatedAtAction(nameof(GetById), new { id = newId },
-                new ApiResponseModel { result = true, message = "Product created.", response = new { id = newId } });
+            var adminId = GetAdminUserId();
+            int newId   = 0;
+            try
+            {
+                newId = await _productService.CreateProductAsync(request);
+                if (adminId.HasValue)
+                    await _audit.LogAdminActionAsync(adminId.Value, "Create Product",
+                        "Product", newId.ToString(),
+                        newValues: JsonSerializer.Serialize(request),
+                        ipAddress: GetIp());
+                return CreatedAtAction(nameof(GetById), new { id = newId },
+                    new ApiResponseModel { result = true, message = "Product created.", response = new { id = newId } });
+            }
+            catch (Exception ex)
+            {
+                if (adminId.HasValue)
+                    await TryAuditError(adminId.Value, "Create Product FAILED", "Product", null,
+                        $"{ex.GetType().Name}: {ex.Message}", JsonSerializer.Serialize(request));
+                throw;
+            }
         }
 
         // POST /api/products/{id}/update — admin only
@@ -59,9 +81,28 @@ namespace TencyBackendApi.Controllers
         [Authorize(Roles = "3")]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateProductRequest request)
         {
+            var adminId = GetAdminUserId();
             request.ProductId = id;
-            await _productService.UpdateProductAsync(request);
-            return Ok(new ApiResponseModel { result = true, message = "Product updated." });
+            try
+            {
+                // Snapshot before
+                var before = await _productService.GetProductByIdAsync(id);
+                await _productService.UpdateProductAsync(request);
+                if (adminId.HasValue)
+                    await _audit.LogAdminActionAsync(adminId.Value, "Update Product",
+                        "Product", id.ToString(),
+                        oldValues: JsonSerializer.Serialize(before),
+                        newValues: JsonSerializer.Serialize(request),
+                        ipAddress: GetIp());
+                return Ok(new ApiResponseModel { result = true, message = "Product updated." });
+            }
+            catch (Exception ex)
+            {
+                if (adminId.HasValue)
+                    await TryAuditError(adminId.Value, "Update Product FAILED", "Product", id.ToString(),
+                        $"{ex.GetType().Name}: {ex.Message}", JsonSerializer.Serialize(request));
+                throw;
+            }
         }
 
         // POST /api/products/{id}/delete — admin only (soft delete / deactivate)
@@ -69,8 +110,22 @@ namespace TencyBackendApi.Controllers
         [Authorize(Roles = "3")]
         public async Task<IActionResult> Deactivate(int id)
         {
-            await _productService.DeactivateProductAsync(id);
-            return Ok(new ApiResponseModel { result = true, message = "Product deactivated." });
+            var adminId = GetAdminUserId();
+            try
+            {
+                await _productService.DeactivateProductAsync(id);
+                if (adminId.HasValue)
+                    await _audit.LogAdminActionAsync(adminId.Value, "Deactivate Product",
+                        "Product", id.ToString(), ipAddress: GetIp());
+                return Ok(new ApiResponseModel { result = true, message = "Product deactivated." });
+            }
+            catch (Exception ex)
+            {
+                if (adminId.HasValue)
+                    await TryAuditError(adminId.Value, "Deactivate Product FAILED", "Product", id.ToString(),
+                        $"{ex.GetType().Name}: {ex.Message}");
+                throw;
+            }
         }
 
         // GET /api/products/{id}/concerns — admin only
@@ -89,6 +144,29 @@ namespace TencyBackendApi.Controllers
         {
             var options = await _productService.GetProductPaymentOptionsAsync(id);
             return Ok(new ApiResponseModel { result = true, response = options });
+        }
+
+        /* ── helpers ───────────────────────────────────────────────────────── */
+        private Guid? GetAdminUserId()
+        {
+            var s = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                 ?? User.FindFirst("sub")?.Value;
+            return Guid.TryParse(s, out var g) ? g : null;
+        }
+
+        private string? GetIp() => HttpContext.Connection.RemoteIpAddress?.ToString();
+
+        private async Task TryAuditError(Guid adminId, string action, string entityType,
+            string? entityId, string errorDetail, string? requestJson = null)
+        {
+            try
+            {
+                await _audit.LogAdminActionAsync(adminId, action, entityType, entityId,
+                    newValues: requestJson,
+                    oldValues: errorDetail,
+                    ipAddress: GetIp());
+            }
+            catch { /* audit must never throw */ }
         }
     }
 }

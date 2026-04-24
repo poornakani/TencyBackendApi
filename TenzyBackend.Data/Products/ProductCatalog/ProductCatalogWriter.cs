@@ -47,6 +47,9 @@ namespace TenzyBackend.Data.Products.ProductCatalog
 
         public async Task<bool> UpdateAsync(UpdateProductRequest request)
         {
+            try
+            {
+
             // Pass NULL when no concern list supplied so the SP leaves concerns unchanged.
             // Pass empty string when the list is explicitly empty (clears all concerns).
             var concernIds = NormalizeConcernIds(request.ConcernTypeIds);
@@ -74,6 +77,12 @@ namespace TenzyBackend.Data.Products.ProductCatalog
             await SyncProductConcernsAsync(request.ProductId, concernIds, replaceExisting: request.ConcernTypeIds != null);
             await SyncProductPaymentOptionsAsync(request.ProductId, request.PaymentOptions);
             return true;
+
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
         }
 
         public async Task<bool> DeactivateAsync(int productId)
@@ -90,43 +99,49 @@ namespace TenzyBackend.Data.Products.ProductCatalog
         {
             if (!replaceExisting) return;
 
-            var p = new DynamicParameters();
-            p.Add("@ProductId", productId, DbType.Int32);
+            var deleteParams = new DynamicParameters();
+            deleteParams.Add("@ProductId", productId, DbType.Int32);
+
             await _dapper.ExecuteAsync(@"
-IF OBJECT_ID('dbo.ProductConcerns', 'U') IS NULL
-    RETURN;
+        IF OBJECT_ID('dbo.ProductConcerns', 'U') IS NULL
+            RETURN;
 
-DELETE FROM dbo.ProductConcerns
-WHERE productid = @ProductId;", p, CommandType.Text);
+        DELETE FROM dbo.ProductConcerns
+        WHERE ProductId = @ProductId;",
+                deleteParams,
+                CommandType.Text);
 
-            foreach (var concernId in concernIds)
+            if (concernIds == null || concernIds.Count == 0)
+                return;
+
+            foreach (var concernId in concernIds.Where(x => x > 0).Distinct())
             {
                 var insertParams = new DynamicParameters();
                 insertParams.Add("@ProductId", productId, DbType.Int32);
                 insertParams.Add("@ConcernId", concernId, DbType.Int32);
 
                 await _dapper.ExecuteAsync(@"
-IF OBJECT_ID('dbo.ProductConcerns', 'U') IS NULL
-    RETURN;
+            IF OBJECT_ID('dbo.ProductConcerns', 'U') IS NULL
+                RETURN;
 
-IF (
-    (OBJECT_ID('dbo.ConcernTypes', 'U') IS NOT NULL AND EXISTS (
-        SELECT 1 FROM dbo.ConcernTypes WHERE ConcernTypeId = @ConcernId
-    ))
-    OR
-    (OBJECT_ID('dbo.ConcernType', 'U') IS NOT NULL AND EXISTS (
-        SELECT 1 FROM dbo.ConcernType WHERE ConcernTypeId = @ConcernId
-    ))
-)
-AND NOT EXISTS (
-    SELECT 1
-    FROM dbo.ProductConcerns
-    WHERE productid = @ProductId AND concernID = @ConcernId
-)
-BEGIN
-    INSERT INTO dbo.ProductConcerns (productid, concernID)
-    VALUES (@ProductId, @ConcernId);
-END", insertParams, CommandType.Text);
+            IF OBJECT_ID('dbo.ConcernTypes', 'U') IS NOT NULL
+               AND EXISTS (
+                   SELECT 1
+                   FROM dbo.ConcernTypes
+                   WHERE ConcernTypeId = @ConcernId
+               )
+               AND NOT EXISTS (
+                   SELECT 1
+                   FROM dbo.ProductConcerns
+                   WHERE ProductId = @ProductId
+                     AND ConcernID = @ConcernId
+               )
+            BEGIN
+                INSERT INTO dbo.ProductConcerns (ProductId, ConcernID)
+                VALUES (@ProductId, @ConcernId);
+            END",
+                    insertParams,
+                    CommandType.Text);
             }
         }
 

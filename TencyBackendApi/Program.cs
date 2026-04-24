@@ -152,8 +152,5 @@ app.UseStaticFiles();   // serves wwwroot/ — product & brand images live at /i
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Admin audit log — after auth so ClaimsPrincipal is populated
-app.UseMiddleware<AdminAuditMiddleware>();
-
 app.MapControllers();
 app.Run();

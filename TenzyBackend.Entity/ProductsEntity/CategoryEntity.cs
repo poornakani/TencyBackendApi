@@ -9,7 +9,7 @@ namespace TenzyBackend.Entity.ProductsEntity
     public class CategoryEntity
     {
         [Key]
-        [Column("catagoryID")]
+        [Column("CategoryId")]
         public int CategoryId { get; set; }
 
         [Required]

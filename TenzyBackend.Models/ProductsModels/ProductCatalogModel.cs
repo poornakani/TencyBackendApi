@@ -84,6 +84,7 @@ namespace TenzyBackend.Models.ProductsModels
     public class ProductPaymentOptionModel
     {
         public int PaymentTypeId { get; set; }
+        public string? PaymentType { get; set; }
         public int? Instalment { get; set; }
     }
 }

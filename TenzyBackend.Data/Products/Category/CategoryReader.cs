@@ -23,7 +23,7 @@ namespace TenzyBackend.Data.Products.Category
         // The DB column is "catagoryID" (typo), which Dapper cannot match
         // to the "CategoryId" property by name, so we alias it explicitly.
         private const string SelectColumns = @"
-            catagoryID   AS CategoryId,
+            CategoryID   AS CategoryId,
             categorytype AS CategoryType,
             isactive     AS IsActive";
 
@@ -35,7 +35,7 @@ namespace TenzyBackend.Data.Products.Category
 
         public override async Task<CategoryEntity?> GetByIdAsync(int id)
         {
-            const string sql = $"SELECT {SelectColumns} FROM dbo.Category WHERE catagoryID = @CategoryId";
+            const string sql = $"SELECT {SelectColumns} FROM dbo.Category WHERE CategoryID = @CategoryId";
             var parms = new DynamicParameters();
             parms.Add("@CategoryId", id);
             return await _dapperPro.GetAsync<CategoryEntity>(sql, parms, commandType: CommandType.Text);

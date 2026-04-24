@@ -2,7 +2,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Security.Claims;
+using System.Text.Json;
 using System.Threading.Tasks;
+using TenzyBackend.Core.Services.AuditService;
 using TenzyBackend.Core.Services.OrderService;
 using TenzyBackend.Models.ApiResponseModels;
 using TenzyBackend.Models.OrderModels;
@@ -14,10 +16,12 @@ namespace TencyBackendApi.Controllers
     public class OrdersController : ControllerBase
     {
         private readonly IOrderService _orderService;
+        private readonly IAuditService _audit;
 
-        public OrdersController(IOrderService orderService)
+        public OrdersController(IOrderService orderService, IAuditService audit)
         {
             _orderService = orderService;
+            _audit        = audit;
         }
 
         // GET /api/orders  — admin, filterable by ?status=pending&page=1&pageSize=20
@@ -65,9 +69,7 @@ namespace TencyBackendApi.Controllers
             if (userId == null)
                 return Unauthorized(new ApiResponseModel { result = false, message = "Invalid token." });
 
-            // Always set UserId from JWT — never trust client-supplied value
             request.UserId = userId.Value;
-
             var newId = await _orderService.CreateOrderAsync(request);
             return CreatedAtAction(nameof(GetById), new { id = newId },
                 new ApiResponseModel { result = true, message = "Order placed successfully.", response = new { id = newId } });
@@ -78,15 +80,49 @@ namespace TencyBackendApi.Controllers
         [Authorize(Roles = "3")]
         public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateOrderStatusRequest request)
         {
-            await _orderService.UpdateOrderStatusAsync(id, request.Status);
-            return Ok(new ApiResponseModel { result = true, message = $"Order status updated to '{request.Status}'." });
+            var adminId = GetCurrentUserId();
+            try
+            {
+                // Snapshot before
+                var before = await _orderService.GetOrderByIdAsync(id);
+                await _orderService.UpdateOrderStatusAsync(id, request.Status);
+                if (adminId.HasValue)
+                    await _audit.LogAdminActionAsync(adminId.Value, "Update Order Status",
+                        "Order", id.ToString(),
+                        oldValues: JsonSerializer.Serialize(new { status = before?.Status }),
+                        newValues: JsonSerializer.Serialize(new { status = request.Status }),
+                        ipAddress: GetIp());
+                return Ok(new ApiResponseModel { result = true, message = $"Order status updated to '{request.Status}'." });
+            }
+            catch (Exception ex)
+            {
+                if (adminId.HasValue)
+                    await TryLogError(adminId.Value, "Update Order Status FAILED", "Order", id.ToString(), ex, request);
+                throw;
+            }
         }
 
+        /* ── helpers ───────────────────────────────────────────────────────── */
         private Guid? GetCurrentUserId()
         {
             var s = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
                  ?? User.FindFirst("sub")?.Value;
             return Guid.TryParse(s, out var g) ? g : null;
+        }
+
+        private string? GetIp() => HttpContext.Connection.RemoteIpAddress?.ToString();
+
+        private async Task TryLogError(Guid adminId, string action, string entityType,
+            string? entityId, Exception ex, object? requestObj = null)
+        {
+            try
+            {
+                await _audit.LogAdminActionAsync(adminId, action, entityType, entityId,
+                    oldValues: $"{ex.GetType().Name}: {ex.Message}",
+                    newValues: requestObj != null ? JsonSerializer.Serialize(requestObj) : null,
+                    ipAddress: GetIp());
+            }
+            catch { /* audit must never throw */ }
         }
     }
 }

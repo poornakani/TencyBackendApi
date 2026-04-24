@@ -371,3 +371,4 @@ appsettings.Production.json
 # dotnet user-secrets store (OS-level, not in repo)
 # Run: dotnet user-secrets set "ConnectionStrings:production" "your-connection-string"
 # Run: dotnet user-secrets set "Jwt:Key" "your-jwt-key-min-32-chars"
+/Database/migrations

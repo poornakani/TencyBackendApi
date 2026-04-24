@@ -71,7 +71,9 @@ namespace TenzyBackend.Data.UserLogin
                 rf.Add("@RefreshTokenHash", refreshHashtoken, DbType.String);
                 rf.Add("@ExpiresAt", DateTime.UtcNow.AddDays(30), DbType.DateTime2);
 
-                await _dapperPro.InsertAsync<Guid>("spRefreshSessions_Insert", rf,commandType: CommandType.StoredProcedure);
+                // spRefreshSessions_Insert returns an INT identity (Id) not a GUID.
+                // We don't need the returned id here, so use ExecuteAsync instead of InsertAsync<T> to avoid type mapping issues.
+                await _dapperPro.ExecuteAsync("spRefreshSessions_Insert", rf, commandType: CommandType.StoredProcedure);
 
                 return newUserId; 
             }
@@ -297,7 +299,7 @@ namespace TenzyBackend.Data.UserLogin
                 var re = new DynamicParameters();
                 // 2) get latest refresh session
                 const string getSessionSql = @"
-                                SELECT TOP 1 UserId, RefreshTokenHash, ExpiresAt
+                                SELECT TOP 1 Id, UserId, RefreshTokenHash, ExpiresAt
                                 FROM RefreshSessions
                                 WHERE UserId = @UserId
                                 ORDER BY CreatedAt DESC;";
@@ -311,13 +313,13 @@ namespace TenzyBackend.Data.UserLogin
 
                 if (session == null)
                 {
-
                     var rf = new DynamicParameters();
                     rf.Add("@UserId", userId, DbType.Guid);
                     rf.Add("@RefreshTokenHash", newHash, DbType.String);
                     rf.Add("@ExpiresAt", DateTime.UtcNow.AddDays(30), DbType.DateTime2);
 
-                    await _dapperPro.InsertAsync<Guid>("spRefreshSessions_Insert", rf, commandType: CommandType.StoredProcedure);
+                    // spRefreshSessions_Insert returns INT; we don't need the returned id here.
+                    await _dapperPro.ExecuteAsync("spRefreshSessions_Insert", rf, commandType: CommandType.StoredProcedure);
 
                     return new RefreshTokenUpdateResultEntity
                     {
@@ -344,6 +346,7 @@ namespace TenzyBackend.Data.UserLogin
                     update.Add("@Hash", newHash, DbType.String);
                     update.Add("@CreatedAt", DateTime.Now, DbType.DateTime2);
                     update.Add("@ExpiresAt", DateTime.UtcNow.AddDays(30), DbType.DateTime2);
+                    update.Add("@Id", session.Id, DbType.Int32);
 
                     await _dapperPro.ExecuteAsync(updateSql, update, CommandType.Text);
 
@@ -531,7 +534,7 @@ namespace TenzyBackend.Data.UserLogin
 
         private class RefreshSessionRow
         {
-            public Guid Id { get; set; }
+            public int Id { get; set; }
             public string RefreshTokenHash { get; set; }
             public DateTime ExpiresAt { get; set; }
         }
